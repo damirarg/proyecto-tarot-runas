@@ -1,7 +1,9 @@
 import { mazo, imagenesRiderWaite, catalogoTiradas, mezclarMazo } from './tarot-data.js';
+import { mazoRunas, catalogoTiradasRunas, mezclarRunas } from './runas-data.js';
 
 let ultimaPregunta = "";
 let ultimasCartas = [];
+let modoActual = "tarot"; // "tarot" o "runas"
 
 // --- FUNCIÓN PARA CONVERTIR MARKDOWN EN HTML DORADO ---
 function formatearTextoMarkdown(texto) {
@@ -35,7 +37,20 @@ const pantallaTiradas = document.getElementById('pantalla-tiradas');
 const pantallaRecomendacion = document.getElementById('pantalla-recomendacion');
 const pantallaLectura = document.getElementById('pantalla-lectura');
 
-document.getElementById('btnIrTiradas').addEventListener('click', () => {
+// Botón: Ir a Tiradas de Tarot
+document.getElementById('btnIrTiradasTarot').addEventListener('click', () => {
+    modoActual = "tarot";
+    document.getElementById('tituloSeccionTirada').textContent = "Consulta de Tarot";
+    pantallaBienvenida.style.display = "none";
+    pantallaTiradas.style.display = "flex";
+    pantallaRecomendacion.style.display = "none";
+    pantallaLectura.style.display = "none";
+});
+
+// Botón: Ir a Runas Vikingas
+document.getElementById('btnIrRunas').addEventListener('click', () => {
+    modoActual = "runas";
+    document.getElementById('tituloSeccionTirada').textContent = "Consulta de Runas Vikingas";
     pantallaBienvenida.style.display = "none";
     pantallaTiradas.style.display = "flex";
     pantallaRecomendacion.style.display = "none";
@@ -59,7 +74,7 @@ document.getElementById('btnCambiarPregunta').addEventListener('click', () => {
     pantallaLectura.style.display = "none";
 });
 
-// --- GENERACIÓN DEL CARRUSEL INTERACTIVO ---
+// --- GENERACIÓN DEL CARRUSEL (DEPENDIENDO SI ES TAROT O RUNAS) ---
 document.getElementById('btnMostrarOpciones').addEventListener('click', () => {
     const pregunta = document.getElementById('preguntaUsuario').value;
     if (!pregunta.trim()) {
@@ -73,12 +88,14 @@ document.getElementById('btnMostrarOpciones').addEventListener('click', () => {
     const carrusel = document.getElementById('carruselTiradas');
     carrusel.innerHTML = ""; 
 
-    catalogoTiradas.forEach(info => {
+    const catalogoActivo = (modoActual === "tarot") ? catalogoTiradas : catalogoTiradasRunas;
+
+    catalogoActivo.forEach(info => {
         const tarjeta = document.createElement('button');
         tarjeta.className = 'tarjeta-carrusel';
         
         const titulo = document.createElement('strong');
-        titulo.textContent = `🔮 ${info.nombre}`;
+        titulo.textContent = (modoActual === "tarot") ? `🔮 ${info.nombre}` : `ᛟ ${info.nombre}`;
         
         const desc = document.createElement('small');
         desc.textContent = info.desc;
@@ -99,19 +116,28 @@ document.getElementById('btnFlechaDer').addEventListener('click', () => {
 });
 
 function ejecutarTiradaElegida(idTirada) {
-    let cantidad = 3;
-    if (idTirada === "1") cantidad = 1;
-    else if (idTirada.startsWith("4")) cantidad = 4;
-    else if (idTirada.startsWith("5")) cantidad = 5;
-    else if (idTirada === "7") cantidad = 7;
-    else if (idTirada === "10") cantidad = 10;
-    else if (idTirada === "12") cantidad = 12;
+    if (modoActual === "tarot") {
+        let cantidad = 3;
+        if (idTirada === "1") cantidad = 1;
+        else if (idTirada.startsWith("4")) cantidad = 4;
+        else if (idTirada.startsWith("5")) cantidad = 5;
+        else if (idTirada === "7") cantidad = 7;
+        else if (idTirada === "10") cantidad = 10;
+        else if (idTirada === "12") cantidad = 12;
 
-    realizarConsultaGenerica(cantidad, idTirada);
+        realizarConsultaTarot(cantidad, idTirada);
+    } else {
+        let cantidadRunas = 1;
+        if (idTirada === "runa_3") cantidadRunas = 3;
+        else if (idTirada === "runa_5") cantidadRunas = 5;
+
+        realizarConsultaRunas(cantidadRunas, idTirada);
+    }
 }
 
-// --- RITUAL INTERACTIVO DE LA CARTA DEL DÍA ---
+// --- RITUAL INTERACTIVO DE LA CARTA DEL DÍA (TAROT) ---
 document.getElementById('btnRitualDia').addEventListener('click', () => {
+    modoActual = "tarot";
     pantallaBienvenida.style.display = "none";
     pantallaTiradas.style.display = "none";
     pantallaRecomendacion.style.display = "none";
@@ -235,8 +261,8 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
     }, 1000);
 }
 
-// --- CONSULTA GENERAL DE CUALQUIER TIRADA ---
-async function realizarConsultaGenerica(cantidadCartas, idTirada) {
+// --- CONSULTA GENERAL DE TAROT ---
+async function realizarConsultaTarot(cantidadCartas, idTirada) {
     const pregunta = document.getElementById('preguntaUsuario').value;
     const divResultado = document.getElementById('resultado');
 
@@ -313,7 +339,96 @@ async function realizarConsultaGenerica(cantidadCartas, idTirada) {
     }
 }
 
-// --- CREACIÓN Y LÓGICA DEL BOTÓN PROFUNDIZAR ---
+// --- CONSULTA DE RUNAS VIKINGAS ---
+async function realizarConsultaRunas(cantidadRunas, idTirada) {
+    const pregunta = document.getElementById('preguntaUsuario').value;
+    const divResultado = document.getElementById('resultado');
+
+    pantallaBienvenida.style.display = "none";
+    pantallaTiradas.style.display = "none";
+    pantallaRecomendacion.style.display = "none";
+    pantallaLectura.style.display = "flex";
+
+    divResultado.innerHTML = "";
+    const loader = document.createElement('p');
+    loader.innerHTML = "<strong style='color: #f3d06c;'>Tallando y arrojando las runas sagradas... ᛟ</strong>";
+    divResultado.appendChild(loader);
+
+    const runasMezcladas = mezclarRunas(mazoRunas);
+    const runasSeleccionadas = runasMezcladas.slice(0, cantidadRunas);
+
+    ultimaPregunta = pregunta;
+    ultimasCartas = runasSeleccionadas.map(r => r.nombre);
+
+    try {
+        const respuesta = await fetch('/api/consultar-runas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                pregunta, 
+                runas: ultimasCartas, 
+                idTirada, 
+                cantidadRunas 
+            })
+        });
+
+        if (!respuesta.ok) throw new Error("Error en el servidor de runas.");
+
+        const datos = await respuesta.json();
+        divResultado.innerHTML = "";
+
+        const tituloPregunta = document.createElement('h3');
+        tituloPregunta.style.color = "#f3d06c";
+        tituloPregunta.textContent = `Tu Consulta Rúnica: ${pregunta}`;
+        divResultado.appendChild(tituloPregunta);
+
+        // Mostrar fichas visuales de las runas seleccionadas
+        const contenedorRunas = document.createElement('div');
+        contenedorRunas.style.display = "flex";
+        contenedorRunas.style.justifyContent = "center";
+        contenedorRunas.style.gap = "15px";
+        contenedorRunas.style.margin = "20px 0";
+        contenedorRunas.style.flexWrap = "wrap";
+
+        runasSeleccionadas.forEach((runa, index) => {
+            const ficha = document.createElement('div');
+            ficha.style.background = "linear-gradient(135deg, rgba(38, 24, 60, 0.95) 0%, rgba(20, 12, 35, 0.95) 100%)";
+            ficha.style.border = "1.5px solid #c59b27";
+            ficha.style.borderRadius = "10px";
+            ficha.style.padding = "20px";
+            ficha.style.textAlign = "center";
+            ficha.style.color = "#f3d06c";
+            ficha.style.minWidth = "120px";
+            ficha.style.boxShadow = "0 5px 15px rgba(0,0,0,0.6)";
+
+            const simbolo = document.createElement('div');
+            simbolo.style.fontSize = "2.5em";
+            simbolo.style.marginBottom = "8px";
+            simbolo.textContent = runa.nombre.match(/\(([^)]+)\)/)[1]; // Extrae el símbolo entre paréntesis
+
+            const nombreRuna = document.createElement('strong');
+            nombreRuna.style.display = "block";
+            nombreRuna.style.fontFamily = "'Playfair Display', serif";
+            nombreRuna.textContent = runa.nombre.split(' ')[0];
+
+            ficha.appendChild(simbolo);
+            ficha.appendChild(nombreRuna);
+            contenedorRunas.appendChild(ficha);
+        });
+
+        divResultado.appendChild(contenedorRunas);
+
+        const textoIA = document.createElement('div');
+        textoIA.style.marginTop = "15px";
+        textoIA.innerHTML = formatearTextoMarkdown(datos.lectura);
+        divResultado.appendChild(textoIA);
+
+    } catch (error) {
+        divResultado.innerHTML = "<p style='color: #ff6b6b;'>Hubo un problema de conexión al procesar la lectura rúnica.</p>";
+    }
+}
+
+// --- LÓGICA DEL BOTÓN DE PROFUNDIZACIÓN ---
 function crearBotonProfundizar(contenedor) {
     const btn = document.createElement('button');
     btn.className = 'btn-profundizar';

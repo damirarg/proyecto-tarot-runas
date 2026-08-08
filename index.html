@@ -3,74 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta Virtual de Tarot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <title>Consulta con Cartitas y Runas</title>
+    <!-- Fuentes de Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Archivo de Estilos CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <audio id="audioFondo" loop>
-        <source src="imagenes/musica_fondo.mp3" type="audio/mp3">
-        Tu navegador no soporta elementos de audio.
-    </audio>
+    <div class="contenedor-principal">
+        
+        <!-- PANTALLA 1: BIENVENIDA Y SELECCIÓN DE ORÁCULO -->
+        <div id="pantalla-bienvenida" class="pantalla" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+            <h1>Consulta Mística</h1>
+            <p class="subtitulo">Conectá con tu intuición y descubrí los mensajes del Tarot o las Runas.</p>
+            
+            <button id="btnRitualDia" class="btn-carta-dia">✨ SACAR MI CARTA DEL DÍA (TAROT)</button>
+            <div style="margin: 10px 0; color: #9a88be; font-style: italic;">— o —</div>
+            <button id="btnIrTiradasTarot" class="btn-ir-tiradas">🔮 HACER UNA TIRADA DE TAROT</button>
+            <div style="margin: 10px 0; color: #9a88be; font-style: italic;">— o —</div>
+            <button id="btnIrRunas" class="btn-ir-tiradas" style="background: linear-gradient(135deg, #422d73 0%, #281a4b 100%); color: #f3d06c; border: 2px solid #c59b27;">ᛟ CONSULTAR LAS RUNAS VIKINGAS</button>
+        </div>
 
-    <button class="control-audio" id="btnAudio" aria-label="Activar o desactivar música de fondo">🎵 Activar Sonido</button>
+        <!-- PANTALLA 2: INGRESO DE PREGUNTA Y SELECCIÓN DE TIRADA -->
+        <div id="pantalla-tiradas" class="pantalla" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
+            <h2 id="tituloSeccionTirada" style="font-family: 'Playfair Display', serif; color: #f3d06c; text-align: center; margin-top: 0;">Consulta de Tarot</h2>
+            <p class="subtitulo">Escribí tu consulta para que el oráculo canalice su energía.</p>
+            
+            <textarea id="preguntaUsuario" rows="3" placeholder="Ej: ¿Cómo se vislumbra mi situación laboral en los próximos meses?"></textarea>
+            
+            <button id="btnMostrarOpciones" class="btn-principal">CONTINUAR A ELECCIÓN DE TIRADA</button>
+            <button class="btn-secundario btn-volver-inicio">VOLVER AL INICIO</button>
+        </div>
 
-    <!-- PANTALLA 1: LANDING PAGE -->
-    <main class="contenedor-principal" id="pantalla-bienvenida">
-        <section style="text-align: center; margin: auto 0;">
-            <h1>Consulta con Cartitas</h1>
-            <p class="subtitulo" style="margin-bottom: 40px;">Conectá con tu intuición y descubrí los mensajes del Tarot.</p>
-
-            <button class="btn-carta-dia" id="btnRitualDia">✨ Sacar mi Carta del Día (Elegí por intuición)</button>
-
-            <div style="margin: 25px 0; color: #9a88be; font-style: italic;">— o —</div>
-
-            <button class="btn-ir-tiradas" id="btnIrTiradas">🔮 Hacer una consulta detallada o tirada</button>
-        </section>
-    </main>
-
-    <!-- PANTALLA 2: INGRESO DE CONSULTA -->
-    <main class="contenedor-principal" id="pantalla-tiradas" style="display: none;">
-        <section>
-            <h1>Consulta Detallada</h1>
-            <p class="subtitulo">Escribí tu inquietud antes de elegir la tirada.</p>
-
-            <label for="preguntaUsuario" style="display:block; margin-bottom: 5px; text-align: left;">¿Qué inquietud deseas explorar hoy?</label>
-            <textarea id="preguntaUsuario" rows="4" placeholder="Escribí tu pregunta con el mayor detalle posible..."></textarea>
-        </section>
-
-        <section>
-            <button class="btn-principal" id="btnMostrarOpciones">Elegir tipo de tirada →</button>
-            <button class="btn-secundario btn-volver-inicio">← Volver al inicio</button>
-        </section>
-    </main>
-
-    <!-- PANTALLA 3: CARRUSEL DE TIRADAS -->
-    <main class="contenedor-principal" id="pantalla-recomendacion" style="display: none;">
-        <section>
-            <h1>Seleccioná tu Tirada</h1>
-            <p class="subtitulo">Deslizá horizontalmente y elegí la lectura que mejor resuene:</p>
-
+        <!-- PANTALLA 3: CARRUSEL DE OPCIONES (TAROT O RUNAS) -->
+        <div id="pantalla-recomendacion" class="pantalla" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
+            <h2 style="font-family: 'Playfair Display', serif; color: #f3d06c; text-align: center; margin-top: 0;">Seleccioná tu Método</h2>
+            <p class="subtitulo">Desplazate y elegí la disposición que desees:</p>
+            
             <div class="contenedor-carrusel-padre">
-                <button class="btn-flecha-carrusel" id="btnFlechaIzq" aria-label="Mover carrusel a la izquierda">‹</button>
-                <div class="carrusel-tiradas" id="carruselTiradas"></div>
-                <button class="btn-flecha-carrusel" id="btnFlechaDer" aria-label="Mover carrusel a la derecha">›</button>
+                <button id="btnFlechaIzq" class="btn-flecha-carrusel">❮</button>
+                <div id="carruselTiradas" class="carrusel-tiradas"></div>
+                <button id="btnFlechaDer" class="btn-flecha-carrusel">❯</button>
             </div>
-        </section>
 
-        <section>
-            <button class="btn-secundario" id="btnCambiarPregunta">← Cambiar mi pregunta</button>
-        </section>
-    </main>
+            <button class="btn-secundario btn-volver-inicio">CANCELAR Y VOLVER</button>
+        </div>
 
-    <!-- PANTALLA 4: LECTURA Y RESULTADO -->
-    <main class="contenedor-principal" id="pantalla-lectura" style="display: none;">
-        <section id="resultado"></section>
-        <button class="btn-secundario btn-volver-inicio" style="margin-top: 20px;">✨ Volver al inicio</button>
-    </main>
+        <!-- PANTALLA 4: RESULTADO DE LA LECTURA -->
+        <div id="pantalla-lectura" class="pantalla" style="display: none; flex-direction: column; justify-content: flex-start; height: 100%; overflow-y: auto;">
+            <div id="resultado"></div>
+            <button id="btnCambiarPregunta" class="btn-secundario" style="margin-top: 15px;">HACER OTRA CONSULTA</button>
+            <button class="btn-secundario btn-volver-inicio" style="margin-top: 10px;">✨ VOLVER AL INICIO</button>
+        </div>
 
-    <!-- Importación de scripts usando módulos de JavaScript -->
+    </div>
+
+    <!-- AUDIO DE FONDO -->
+    <audio id="audioFondo" loop>
+        <source src="audio_mistico.mp3" type="audio/mpeg">
+    </audio>
+    <button id="btnAudio" class="control-audio">🎵 Activar Sonido</button>
+
+    <!-- ARCHIVO PRINCIPAL DE JAVASCRIPT -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
