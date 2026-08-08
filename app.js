@@ -382,7 +382,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         tituloPregunta.textContent = `Tu Consulta Rúnica: ${pregunta}`;
         divResultado.appendChild(tituloPregunta);
 
-        // Mostrar fichas visuales de las runas seleccionadas (Estilo Piedra Tallada)
+        // Mostrar fichas visuales de las runas con las imágenes de madera reales
         const contenedorRunas = document.createElement('div');
         contenedorRunas.style.display = "flex";
         contenedorRunas.style.justifyContent = "center";
@@ -395,26 +395,28 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             ficha.style.background = "linear-gradient(145deg, #2a2533, #15101f)";
             ficha.style.border = "2px solid #c59b27";
             ficha.style.borderRadius = "12px";
-            ficha.style.padding = "18px 12px";
+            ficha.style.padding = "12px";
             ficha.style.textAlign = "center";
             ficha.style.color = "#f3d06c";
-            ficha.style.minWidth = "100px";
-            ficha.style.boxShadow = "0 8px 20px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.05)";
+            ficha.style.width = "110px";
+            ficha.style.boxShadow = "0 8px 20px rgba(0,0,0,0.8)";
             ficha.style.animation = `aparecerCarta 0.6s ease-out ${index * 0.2}s forwards`;
 
-            const simbolo = document.createElement('div');
-            simbolo.style.fontSize = "3em";
-            simbolo.style.marginBottom = "5px";
-            simbolo.style.textShadow = "0 0 10px rgba(243, 208, 108, 0.4)";
-            simbolo.textContent = runa.simbolo;
+            const imgRuna = document.createElement('img');
+            imgRuna.src = `runas_imagenes/${runa.id}.png`;
+            imgRuna.alt = runa.nombre;
+            imgRuna.style.width = "85px";
+            imgRuna.style.height = "85px";
+            imgRuna.style.objectFit = "contain";
+            imgRuna.style.marginBottom = "8px";
 
             const nombreRuna = document.createElement('strong');
             nombreRuna.style.display = "block";
             nombreRuna.style.fontFamily = "'Playfair Display', serif";
-            nombreRuna.style.fontSize = "1.05em";
+            nombreRuna.style.fontSize = "0.95em";
             nombreRuna.textContent = runa.nombre;
 
-            ficha.appendChild(simbolo);
+            ficha.appendChild(imgRuna);
             ficha.appendChild(nombreRuna);
             contenedorRunas.appendChild(ficha);
         });
