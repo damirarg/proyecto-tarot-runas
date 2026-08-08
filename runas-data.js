@@ -22,7 +22,7 @@ export const mazoRunas = [
     { id: "ehwaz", nombre: "Ehwaz", simbolo: "ᛖ" },
     { id: "mannaz", nombre: "Mannaz", simbolo: "ᛗ" },
     { id: "laguz", nombre: "Laguz", simbolo: "ᛚ" },
-    { id: "ingwas", nombre: "Ingwaz", simbolo: "ᛝ" },
+    { id: "ingwaz", nombre: "Ingwaz", simbolo: "ᛝ" },
     { id: "dagaz", nombre: "Dagaz", simbolo: "ᛞ" },
     { id: "othala", nombre: "Othala", simbolo: "ᛟ" }
 ];
