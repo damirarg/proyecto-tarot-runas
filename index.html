@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta Virtual de Tarot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <audio id="audioFondo" loop>
+        <source src="imagenes/musica_fondo.mp3" type="audio/mp3">
+        Tu navegador no soporta elementos de audio.
+    </audio>
+
+    <button class="control-audio" id="btnAudio" aria-label="Activar o desactivar música de fondo">🎵 Activar Sonido</button>
+
+    <!-- PANTALLA 1: LANDING PAGE -->
+    <main class="contenedor-principal" id="pantalla-bienvenida">
+        <section style="text-align: center; margin: auto 0;">
+            <h1>Consulta con Cartitas</h1>
+            <p class="subtitulo" style="margin-bottom: 40px;">Conectá con tu intuición y descubrí los mensajes del Tarot.</p>
+
+            <button class="btn-carta-dia" id="btnRitualDia">✨ Sacar mi Carta del Día (Elegí por intuición)</button>
+
+            <div style="margin: 25px 0; color: #9a88be; font-style: italic;">— o —</div>
+
+            <button class="btn-ir-tiradas" id="btnIrTiradas">🔮 Hacer una consulta detallada o tirada</button>
+        </section>
+    </main>
+
+    <!-- PANTALLA 2: INGRESO DE CONSULTA -->
+    <main class="contenedor-principal" id="pantalla-tiradas" style="display: none;">
+        <section>
+            <h1>Consulta Detallada</h1>
+            <p class="subtitulo">Escribí tu inquietud antes de elegir la tirada.</p>
+
+            <label for="preguntaUsuario" style="display:block; margin-bottom: 5px; text-align: left;">¿Qué inquietud deseas explorar hoy?</label>
+            <textarea id="preguntaUsuario" rows="4" placeholder="Escribí tu pregunta con el mayor detalle posible..."></textarea>
+        </section>
+
+        <section>
+            <button class="btn-principal" id="btnMostrarOpciones">Elegir tipo de tirada →</button>
+            <button class="btn-secundario btn-volver-inicio">← Volver al inicio</button>
+        </section>
+    </main>
+
+    <!-- PANTALLA 3: CARRUSEL DE TIRADAS -->
+    <main class="contenedor-principal" id="pantalla-recomendacion" style="display: none;">
+        <section>
+            <h1>Seleccioná tu Tirada</h1>
+            <p class="subtitulo">Deslizá horizontalmente y elegí la lectura que mejor resuene:</p>
+
+            <div class="contenedor-carrusel-padre">
+                <button class="btn-flecha-carrusel" id="btnFlechaIzq" aria-label="Mover carrusel a la izquierda">‹</button>
+                <div class="carrusel-tiradas" id="carruselTiradas"></div>
+                <button class="btn-flecha-carrusel" id="btnFlechaDer" aria-label="Mover carrusel a la derecha">›</button>
+            </div>
+        </section>
+
+        <section>
+            <button class="btn-secundario" id="btnCambiarPregunta">← Cambiar mi pregunta</button>
+        </section>
+    </main>
+
+    <!-- PANTALLA 4: LECTURA Y RESULTADO -->
+    <main class="contenedor-principal" id="pantalla-lectura" style="display: none;">
+        <section id="resultado"></section>
+        <button class="btn-secundario btn-volver-inicio" style="margin-top: 20px;">✨ Volver al inicio</button>
+    </main>
+
+    <!-- Importación de scripts usando módulos de JavaScript -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
