@@ -28,9 +28,41 @@ export const mazoRunas = [
 ];
 
 export const catalogoTiradasRunas = [
-    { id: "runa_1", nombre: "Runa de Odin (1)", desc: "Consejo directo del oráculo" },
-    { id: "runa_3", nombre: "Las Tres Nornas (3)", desc: "Urd (Pasado), Verdandi (Presente) y Skuld (Futuro)" },
-    { id: "runa_5", nombre: "La Cruz de Thor (5)", desc: "Situación, reto, ayuda, camino y desenlace" }
+    { 
+        id: "cruz_runica", 
+        nombre: "Cruz Rúnica (4)", 
+        desc: "Situación, obstáculo, reflexión y consejo." 
+    },
+    { 
+        id: "nornas", 
+        nombre: "Tríptico de las Nornas (3)", 
+        desc: "Urdh (Pasado), Verdhandi (Presente) y Skuld (Futuro)." 
+    },
+    { 
+        id: "tirada_5", 
+        nombre: "Tirada de 5 Runas (5)", 
+        desc: "Visión global, desafío, momento actual, acciones y futuro." 
+    },
+    { 
+        id: "tirada_7", 
+        nombre: "Tirada de 7 Runas / Mimir (7)", 
+        desc: "Pares temporales (pasado, presente, futuro) y consejo final." 
+    },
+    { 
+        id: "cruz_celta", 
+        nombre: "Cruz Celta Rúnica (6)", 
+        desc: "Pasado, presente, futuro, bases, naturaleza y resultado." 
+    },
+    { 
+        id: "martillo_thor", 
+        nombre: "El Martillo de Thor / Tirada en T (6)", 
+        desc: "Pasado, presente, futuro, bases, retos e influencia." 
+    },
+    { 
+        id: "yggdrasil", 
+        nombre: "Yggdrasil (9)", 
+        desc: "El árbol sagrado: situación, percepción, retos, fuerzas y guía." 
+    }
 ];
 
 export function mezclarRunas(array) {

@@ -128,8 +128,12 @@ function ejecutarTiradaElegida(idTirada) {
         realizarConsultaTarot(cantidad, idTirada);
     } else {
         let cantidadRunas = 1;
-        if (idTirada === "runa_3") cantidadRunas = 3;
-        else if (idTirada === "runa_5") cantidadRunas = 5;
+        if (idTirada === "nornas") cantidadRunas = 3;
+        else if (idTirada === "cruz_runica") cantidadRunas = 4;
+        else if (idTirada === "tirada_5") cantidadRunas = 5;
+        else if (idTirada === "cruz_celta" || idTirada === "martillo_thor") cantidadRunas = 6;
+        else if (idTirada === "tirada_7") cantidadRunas = 7;
+        else if (idTirada === "yggdrasil") cantidadRunas = 9;
 
         realizarConsultaRunas(cantidadRunas, idTirada);
     }

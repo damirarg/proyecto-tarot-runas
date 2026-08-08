@@ -32,11 +32,9 @@ REGLAS GRAMATICALES OBLIGATORIAS DE ESPAÑOL:
 const PERSONALIDAD_RUNAS = `Actuá como un sabio maestro de la tradición nórdica y experto absoluto en el Futhark Antiguo. 
 
 REGLAS PARA LAS LECTURAS DE RUNAS:
-1. Analizá la energía profunda de cada runa seleccionada conectándola de manera directa con la pregunta del consultante.
-2. Si la tirada es de 3 runas (Las Tres Nornas), interpretalas estrictamente bajo el flujo temporal de Urd (Lo que fue / Pasado), Verdandi (Lo que es / Presente) y Skuld (Lo que será / Futuro).
-3. Si la tirada es de 5 runas (La Cruz de Thor), desglosá cada posición de forma metódica (Situación, Reto, Ayuda, Camino y Desenlace).
-4. Usá un tono místico, respetuoso, empático y constructivo. 
-5. Utiliza formato Markdown con títulos destacados en **negritas** para ordenar la lectura de forma impecable.`;
+1. Analizá la energía profunda de cada runa seleccionada conectándola de manera directa con la pregunta del consultante y la posición específica que ocupa en la tirada.
+2. Usá un tono místico, respetuoso, empático y constructivo. 
+3. Utiliza formato Markdown con títulos destacados en **negritas** para ordenar la lectura de forma impecable.`;
 
 app.post('/api/consultar-tarot', async (req, res) => {
     try {
@@ -124,9 +122,71 @@ app.post('/api/consultar-runas', async (req, res) => {
         const { pregunta, runas, idTirada, cantidadRunas } = req.body;
         const listaRunasTexto = Array.isArray(runas) ? runas.join(", ") : (runas || "Seleccionadas");
 
-        const instrucciones = `El consultante pregunta sobre su destino con las runas: "${pregunta}". 
-        Tirada de runas elegida ID: ${idTirada} con ${cantidadRunas} runas: ${listaRunasTexto}.
-        Ofrece una lectura de runas vikingas clara, profunda, mística y precisa basada en el Futhark Antiguo. Usa formato Markdown con **negritas** para los títulos.`;
+        let detallePosiciones = "";
+
+        if (idTirada === "cruz_runica") {
+            detallePosiciones = `Tirada: Cruz Rúnica (4 runas).
+            - Runa 1: Situación tal cual se presenta.
+            - Runa 2: Oposición, bloqueo u obstáculo.
+            - Runa 3: Discernimiento y reflexión sobre el contexto.
+            - Runa 4: Consejo de las runas / advertencia.`;
+        } else if (idTirada === "nornas") {
+            detallePosiciones = `Tirada: Tríptico de las Nornas (3 runas).
+            - Runa 1 (Urdh): El Pasado / Cómo se generó la situación.
+            - Runa 2 (Verdhandi): El Presente / Estado actual y acciones de ahora.
+            - Runa 3 (Skuld): El Futuro / Tendencia y cómo prepararse o mejorar el desenlace.`;
+        } else if (idTirada === "tirada_5") {
+            detallePosiciones = `Tirada de 5 Runas (5 runas).
+            - Runa 1: Visión global y factores externos.
+            - Runa 2: Desafío o pruebas a superar.
+            - Runa 3: Situación actual (posibilidades o debilidades).
+            - Runa 4: Acciones necesarias / correctivos.
+            - Runa 5: Situación futura y desenlace posible.`;
+        } else if (idTirada === "tirada_7") {
+            detallePosiciones = `Tirada de 7 Runas / Mimir (7 runas).
+            - Runas 1 y 2: Pasado (aspectos positivos y negativos).
+            - Runas 3 y 4: Presente (análisis integral del momento).
+            - Runas 5 y 6: Futuro (tendencias temporales).
+            - Runa 7: Consejo final u orientación.`;
+        } else if (idTirada === "cruz_celta") {
+            detallePosiciones = `Tirada: Cruz Celta Rúnica (6 runas).
+            - Runa 1: Pasado / Circunstancias anteriores.
+            - Runa 2: Condiciones del presente.
+            - Runa 3: Tendencia a futuro.
+            - Runa 4: Bases de la situación / elementos inconscientes.
+            - Runa 5: Naturaleza del asunto.
+            - Runa 6: Resultado sugerido y acciones posibles.`;
+        } else if (idTirada === "martillo_thor") {
+            detallePosiciones = `Tirada: El Martillo de Thor / En "T" (6 runas).
+            - Runa 1: Pasado.
+            - Runa 2: Presente.
+            - Runa 3: Tendencia en el futuro inmediato.
+            - Runa 4: Bases y fundamentos del asunto.
+            - Runa 5: Retos y dificultades a superar.
+            - Runa 6: Influencia del consultante en lo que ocurre.`;
+        } else if (idTirada === "yggdrasil") {
+            detallePosiciones = `Tirada: Yggdrasil - El Árbol Sagrado (9 runas).
+            - Runa 1: Situación actual.
+            - Runa 2: Percepción / Cómo afecta al consultante.
+            - Runa 3: Desafíos y temas cruciales a superar.
+            - Runa 4: Fortalezas y recursos externos.
+            - Runa 5: Aprendizaje obtenido hasta ahora.
+            - Runa 6: Lo que se necesita aprender todavía.
+            - Runa 7: Ayuda / Personas o situaciones favorables.
+            - Runa 8: Consejo guía y fuente de sabiduría.
+            - Runa 9: Advertencias y tendencias inmediatas a tener en cuenta.`;
+        } else {
+            detallePosiciones = `Tirada general con ${cantidadRunas} runas.`;
+        }
+
+        const instrucciones = `El consultante pregunta: "${pregunta}". 
+        Método seleccionado: ${idTirada}.
+        Runas extraídas en orden numérico: ${listaRunasTexto}.
+
+        Estructura de la lectura obligatoria basada en la disposición rúnica:
+        ${detallePosiciones}
+
+        Ofrece una lectura de runas vikingas profunda, mística y estructurada paso a paso según cada posición indicada. Usa formato Markdown con **negritas** para los títulos.`;
 
         const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -137,7 +197,7 @@ app.post('/api/consultar-runas', async (req, res) => {
             body: JSON.stringify({
                 model: "llama-3.3-70b-versatile",
                 temperature: 0.3,
-                max_tokens: 1200,
+                max_tokens: 1500,
                 messages: [
                     { role: "system", content: PERSONALIDAD_RUNAS },
                     { role: "user", content: instrucciones }
