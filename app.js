@@ -382,34 +382,37 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         tituloPregunta.textContent = `Tu Consulta Rúnica: ${pregunta}`;
         divResultado.appendChild(tituloPregunta);
 
-        // Mostrar fichas visuales de las runas seleccionadas
+        // Mostrar fichas visuales de las runas seleccionadas (Estilo Piedra Tallada)
         const contenedorRunas = document.createElement('div');
         contenedorRunas.style.display = "flex";
         contenedorRunas.style.justifyContent = "center";
-        contenedorRunas.style.gap = "15px";
+        contenedorRunas.style.gap = "18px";
         contenedorRunas.style.margin = "20px 0";
         contenedorRunas.style.flexWrap = "wrap";
 
         runasSeleccionadas.forEach((runa, index) => {
             const ficha = document.createElement('div');
-            ficha.style.background = "linear-gradient(135deg, rgba(38, 24, 60, 0.95) 0%, rgba(20, 12, 35, 0.95) 100%)";
-            ficha.style.border = "1.5px solid #c59b27";
-            ficha.style.borderRadius = "10px";
-            ficha.style.padding = "20px";
+            ficha.style.background = "linear-gradient(145deg, #2a2533, #15101f)";
+            ficha.style.border = "2px solid #c59b27";
+            ficha.style.borderRadius = "12px";
+            ficha.style.padding = "18px 12px";
             ficha.style.textAlign = "center";
             ficha.style.color = "#f3d06c";
-            ficha.style.minWidth = "120px";
-            ficha.style.boxShadow = "0 5px 15px rgba(0,0,0,0.6)";
+            ficha.style.minWidth = "100px";
+            ficha.style.boxShadow = "0 8px 20px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.05)";
+            ficha.style.animation = `aparecerCarta 0.6s ease-out ${index * 0.2}s forwards`;
 
             const simbolo = document.createElement('div');
-            simbolo.style.fontSize = "2.5em";
-            simbolo.style.marginBottom = "8px";
-            simbolo.textContent = runa.nombre.match(/\(([^)]+)\)/)[1]; // Extrae el símbolo entre paréntesis
+            simbolo.style.fontSize = "3em";
+            simbolo.style.marginBottom = "5px";
+            simbolo.style.textShadow = "0 0 10px rgba(243, 208, 108, 0.4)";
+            simbolo.textContent = runa.simbolo;
 
             const nombreRuna = document.createElement('strong');
             nombreRuna.style.display = "block";
             nombreRuna.style.fontFamily = "'Playfair Display', serif";
-            nombreRuna.textContent = runa.nombre.split(' ')[0];
+            nombreRuna.style.fontSize = "1.05em";
+            nombreRuna.textContent = runa.nombre;
 
             ficha.appendChild(simbolo);
             ficha.appendChild(nombreRuna);
