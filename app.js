@@ -397,11 +397,13 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
     ultimaPregunta = pregunta;
     ultimasCartas = runasSeleccionadas.map(r => r.nombre);
 
+    // SELECCIÓN DE MESA CSS: Aquí separamos la Cruz Celta del Martillo de Thor
     let claseMesaRunas = "mesa-runas-lineal";
     if (idTirada === "runa_odin" || idTirada === "nornas") claseMesaRunas = "mesa-runas-lineal";
     else if (idTirada === "cruz_runica") claseMesaRunas = "mesa-cruz-runica";
     else if (idTirada === "tirada_5") claseMesaRunas = "mesa-tirada-5-runas";
-    else if (idTirada === "cruz_celta" || idTirada === "martillo_thor") claseMesaRunas = "mesa-cruz-celta-runas";
+    else if (idTirada === "cruz_celta") claseMesaRunas = "mesa-cruz-celta-runas";
+    else if (idTirada === "martillo_thor") claseMesaRunas = "mesa-martillo-thor";
     else if (idTirada === "tirada_7") claseMesaRunas = "mesa-tirada-7-runas";
     else if (idTirada === "yggdrasil") claseMesaRunas = "mesa-yggdrasil";
 

@@ -407,7 +407,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
         ". runa8 .";
     gap: 15px;
     justify-content: center;
-    align-items: center; /* Centramos el contenido dentro de sus celdas */
+    align-items: center;
     margin: 20px auto;
 }
 .mesa-yggdrasil .runa-ficha { justify-self: center; }
@@ -455,7 +455,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
         ". . . runa7 runa7 . . .";
     gap: 15px 8px;
     justify-content: center;
-    align-items: center; /* Aseguramos alineación central sin estiramientos */
+    align-items: center;
     margin: 20px auto;
     width: 100%;
     max-width: 800px;
@@ -463,7 +463,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 
 .mesa-tirada-7-runas .runa-ficha {
     width: 85px;         
-    height: 140px;       /* Altura estrictamente fija para que la runa 7 no se encoja ni se estire */
+    height: 140px;
     justify-self: center; 
 }
 
@@ -471,6 +471,21 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     width: 60px;
     height: 60px;
 }
+
+/* NUEVA MESA: MARTILLO DE THOR (FORMA DE T) */
+.mesa-martillo-thor {
+    display: grid;
+    grid-template-areas:
+        "runa1 runa2 runa3"
+        ". runa4 ."
+        ". runa5 ."
+        ". runa6 .";
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+}
+.mesa-martillo-thor .runa-ficha { justify-self: center; }
 
 #resultado {
     margin-top: 15px; padding: 20px;
@@ -530,7 +545,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     }
     .mesa-tirada-7-runas .runa-ficha { 
         width: 55px; 
-        height: 105px; /* Fijamos la altura también en móviles */
+        height: 105px; 
         padding: 4px; 
     }
     .mesa-tirada-7-runas .img-runa {
