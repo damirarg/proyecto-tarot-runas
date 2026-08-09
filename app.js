@@ -4,6 +4,7 @@ import { mazoRunas, catalogoTiradasRunas, mezclarRunas } from './runas-data.js';
 let ultimaPregunta = "";
 let ultimasCartas = [];
 let modoActual = "tarot"; 
+let intervaloNieve = null;
 
 // --- FUNCIÓN PARA CONVERTIR MARKDOWN EN HTML DORADO ---
 function formatearTextoMarkdown(texto) {
@@ -14,65 +15,152 @@ function formatearTextoMarkdown(texto) {
         .replace(/\n/g, '<br>');
 }
 
-// --- CONTROL DE AUDIO SEGURO ---
-const audio = document.getElementById('audioFondo');
+// --- GESTIÓN DE AUDIO DINÁMICA ---
+const audioTarot = document.getElementById('audioFondo');
+const audioRunas = document.getElementById('audioRunas');
 const btnAudio = document.getElementById('btnAudio');
+
+function manejarAudioPorReino() {
+    if (!btnAudio) return;
+    btnAudio.style.display = "block"; // Mostramos el botón de audio al entrar al reino
+    if (btnAudio.textContent.includes("Activar")) return; 
+    
+    if (modoActual === "tarot") {
+        if (audioRunas) audioRunas.pause();
+        if (audioTarot) audioTarot.play().catch(()=>{});
+    } else {
+        if (audioTarot) audioTarot.pause();
+        if (audioRunas) audioRunas.play().catch(()=>{});
+    }
+}
+
+function detenerTodoElAudio() {
+    if (audioTarot) audioTarot.pause();
+    if (audioRunas) audioRunas.pause();
+    if (btnAudio) btnAudio.style.display = "none"; // Ocultamos el botón en el inicio
+}
 
 if (btnAudio) {
     btnAudio.addEventListener('click', () => {
-        if (audio && audio.paused) {
-            audio.play().then(() => {
+        let audioActivo = modoActual === "tarot" ? audioTarot : audioRunas;
+        if (audioActivo && audioActivo.paused) {
+            audioActivo.play().then(() => {
                 btnAudio.textContent = "🔇 Silenciar Sonido";
             }).catch(() => {
                 alert("El navegador requiere interacción previa para reproducir sonido.");
             });
-        } else if (audio) {
-            audio.pause();
+        } else if (audioActivo) {
+            audioActivo.pause();
             btnAudio.textContent = "🎵 Activar Sonido";
         }
     });
 }
 
-// --- NAVEGACIÓN ENTRE PANTALLAS ---
+// --- EFECTO DE NIEVE (SOLO PARA RUNAS) ---
+function iniciarNieve() {
+    const contenedorNieve = document.getElementById('contenedor-nieve');
+    if (!contenedorNieve) return;
+    contenedorNieve.style.display = 'block';
+    
+    intervaloNieve = setInterval(() => {
+        const copo = document.createElement('div');
+        copo.classList.add('copo-nieve');
+        copo.style.left = Math.random() * 100 + 'vw';
+        copo.style.animationDuration = Math.random() * 3 + 2 + 's'; 
+        const size = Math.random() * 5 + 2; 
+        copo.style.width = size + 'px';
+        copo.style.height = size + 'px';
+        
+        contenedorNieve.appendChild(copo);
+        setTimeout(() => { copo.remove(); }, 5000);
+    }, 150);
+}
+
+function detenerNieve() {
+    if (intervaloNieve) clearInterval(intervaloNieve);
+    const contenedorNieve = document.getElementById('contenedor-nieve');
+    if (contenedorNieve) {
+        contenedorNieve.innerHTML = '';
+        contenedorNieve.style.display = 'none';
+    }
+}
+
+// --- NAVEGACIÓN Y PORTALES ---
+const pantallaPortales = document.getElementById('pantalla-portales');
 const pantallaBienvenida = document.getElementById('pantalla-bienvenida');
 const pantallaTiradas = document.getElementById('pantalla-tiradas');
 const pantallaRecomendacion = document.getElementById('pantalla-recomendacion');
 const pantallaLectura = document.getElementById('pantalla-lectura');
+const contenedorPrincipal = document.getElementById('contenedor-principal');
 
-document.getElementById('btnIrTiradasTarot')?.addEventListener('click', () => {
+// Portales Principales
+document.getElementById('btnPortalTarot')?.addEventListener('click', () => {
     modoActual = "tarot";
+    document.body.className = 'bg-tarot'; 
+    if (contenedorPrincipal) contenedorPrincipal.classList.add('modo-reino');
+    detenerNieve();
+    manejarAudioPorReino();
+    
+    if (pantallaPortales) pantallaPortales.style.display = "none";
+    if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
+    
     const titulo = document.getElementById('tituloSeccionTirada');
-    if (titulo) titulo.textContent = "Consulta de Tarot";
-    if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
-    if (pantallaTiradas) pantallaTiradas.style.display = "flex";
-    if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
-    if (pantallaLectura) pantallaLectura.style.display = "none";
+    if (titulo) titulo.textContent = "Oráculo del Tarot";
+    
+    const cartaDecorativa = document.getElementById('cartaDecorativa');
+    if (cartaDecorativa) cartaDecorativa.src = "imagenes/00_TheFool.jpg"; 
+    
+    const textoRitualDia = document.getElementById('textoRitualDia');
+    if (textoRitualDia) textoRitualDia.textContent = "Carta del Día";
 });
 
-document.getElementById('btnIrRunas')?.addEventListener('click', () => {
+document.getElementById('btnPortalRunas')?.addEventListener('click', () => {
     modoActual = "runas";
+    document.body.className = 'bg-runas'; 
+    if (contenedorPrincipal) contenedorPrincipal.classList.add('modo-reino');
+    iniciarNieve();
+    manejarAudioPorReino();
+    
+    if (pantallaPortales) pantallaPortales.style.display = "none";
+    if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
+    
     const titulo = document.getElementById('tituloSeccionTirada');
-    if (titulo) titulo.textContent = "Consulta de Runas Vikingas";
-    if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
-    if (pantallaTiradas) pantallaTiradas.style.display = "flex";
-    if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
-    if (pantallaLectura) pantallaLectura.style.display = "none";
+    if (titulo) titulo.textContent = "Sabiduría de las Runas";
+
+    const cartaDecorativa = document.getElementById('cartaDecorativa');
+    if (cartaDecorativa) cartaDecorativa.src = "runas_imagenes/fehu.png"; 
+
+    const textoRitualDia = document.getElementById('textoRitualDia');
+    if (textoRitualDia) textoRitualDia.textContent = "Runa del Día";
 });
 
+// Botones de sub-menú (Solapas)
+document.getElementById('btnIrTiradas')?.addEventListener('click', () => {
+    if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
+    if (pantallaTiradas) pantallaTiradas.style.display = "flex";
+});
+
+// Botones "Volver al Inicio" (Gran Salón)
 document.querySelectorAll('.btn-volver-inicio').forEach(btn => {
     btn.addEventListener('click', () => {
-        if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
+        document.body.className = 'bg-general'; 
+        if (contenedorPrincipal) contenedorPrincipal.classList.remove('modo-reino');
+        detenerNieve();
+        detenerTodoElAudio();
+        
+        if (pantallaPortales) pantallaPortales.style.display = "flex";
+        if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
         if (pantallaTiradas) pantallaTiradas.style.display = "none";
         if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
         if (pantallaLectura) pantallaLectura.style.display = "none";
+        
         const inputPregunta = document.getElementById('preguntaUsuario');
         if (inputPregunta) inputPregunta.value = "";
     });
 });
 
-// --- SOLUCIÓN AL BOTÓN DE CAMBIAR PREGUNTA / OTRA CONSULTA ---
-const botonesOtraConsulta = document.querySelectorAll('#btnCambiarPregunta, #btnHacerOtraConsulta, .btn-otra-consulta');
-
+// Botón Hacer Otra Consulta dentro del mismo reino
+const botonesOtraConsulta = document.querySelectorAll('#btnCambiarPregunta, #btnHacerOtraConsulta');
 botonesOtraConsulta.forEach(btn => {
     btn.addEventListener('click', () => {
         if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
@@ -82,11 +170,6 @@ botonesOtraConsulta.forEach(btn => {
         
         const inputPregunta = document.getElementById('preguntaUsuario');
         if (inputPregunta) inputPregunta.value = "";
-
-        const titulo = document.getElementById('tituloSeccionTirada');
-        if (titulo) {
-            titulo.textContent = (modoActual === "tarot") ? "Consulta de Tarot" : "Consulta de Runas Vikingas";
-        }
     });
 });
 
@@ -158,16 +241,10 @@ function ejecutarTiradaElegida(idTirada) {
     }
 }
 
-// --- RITUAL INTERACTIVO DE LA CARTA DEL DÍA (TAROT) ---
+// --- RITUAL INTERACTIVO DE LA CARTA DEL DÍA ---
 document.getElementById('btnRitualDia')?.addEventListener('click', () => {
-    modoActual = "tarot";
     if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
-    if (pantallaTiradas) pantallaTiradas.style.display = "none";
-    if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
     if (pantallaLectura) pantallaLectura.style.display = "flex";
-
-    const btnOtraConsulta = document.getElementById('btnHacerOtraConsulta');
-    if (btnOtraConsulta) btnOtraConsulta.style.display = "none";
 
     const divResultado = document.getElementById('resultado');
     if (!divResultado) return;
@@ -176,46 +253,43 @@ document.getElementById('btnRitualDia')?.addEventListener('click', () => {
     const tituloRitual = document.createElement('strong');
     tituloRitual.style.color = "#f3d06c";
     tituloRitual.style.fontSize = "1.2em";
-    tituloRitual.textContent = "✨ Ritual de la Carta del Día ✨";
+    tituloRitual.textContent = (modoActual === "tarot") ? "✨ Ritual de la Carta del Día ✨" : "✨ Runa del Día ✨";
 
     const descRitual = document.createElement('p');
     descRitual.style.color = "#d1c4e9";
     descRitual.style.fontSize = "0.95em";
     descRitual.style.marginTop = "20px";
-    descRitual.textContent = "El mazo completo de 78 arcanos está extendido en abanico. Desplazate horizontalmente y elegí una carta por intuición:";
+    descRitual.textContent = (modoActual === "tarot") ? "El mazo completo de 78 arcanos está extendido en abanico. Desplázate horizontalmente y elige una carta por intuición:" : "Las runas están preparadas. Selecciona una pieza por intuición:";
 
     const mesaAbanico = document.createElement('div');
     mesaAbanico.className = "mesa-seleccion-cartas";
 
-    const mazoMezclado = mezclarMazo(mazo);
+    if (modoActual === "tarot") {
+        const mazoMezclado = mezclarMazo(mazo);
+        mazoMezclado.forEach((cartaSecreta) => {
+            const archivoRider = imagenesRiderWaite[cartaSecreta];
+            
+            const cartaContenedor = document.createElement('div');
+            cartaContenedor.className = 'carta-contenedor';
+            cartaContenedor.innerHTML = `<div class="carta-flipper"><div class="cara-trasera"></div><img class="cara-frontal" src="imagenes/${archivoRider}" alt="${cartaSecreta}"></div>`;
 
-    mazoMezclado.forEach((cartaSecreta) => {
-        const archivoRider = imagenesRiderWaite[cartaSecreta];
-        
-        const cartaContenedor = document.createElement('div');
-        cartaContenedor.className = 'carta-contenedor';
-        
-        const cartaFlipper = document.createElement('div');
-        cartaFlipper.className = 'carta-flipper';
-
-        const caraTrasera = document.createElement('div');
-        caraTrasera.className = 'cara-trasera';
-
-        const caraFrontal = document.createElement('img');
-        caraFrontal.className = 'cara-frontal';
-        caraFrontal.src = `imagenes/${archivoRider}`;
-        caraFrontal.alt = cartaSecreta;
-
-        cartaFlipper.appendChild(caraTrasera);
-        cartaFlipper.appendChild(caraFrontal);
-        cartaContenedor.appendChild(cartaFlipper);
-
-        cartaContenedor.addEventListener('click', () => {
-            elegirCartaInteractiva(cartaContenedor, cartaSecreta, archivoRider);
+            cartaContenedor.addEventListener('click', () => elegirCartaInteractiva(cartaContenedor, cartaSecreta, archivoRider));
+            mesaAbanico.appendChild(cartaContenedor);
         });
+    } else {
+        const runasMezcladas = mezclarRunas(mazoRunas);
+        runasMezcladas.forEach((runaSecreta) => {
+            const cartaContenedor = document.createElement('div');
+            cartaContenedor.className = 'carta-contenedor';
+            cartaContenedor.style.width = '70px';
+            cartaContenedor.innerHTML = `<div class="carta-flipper"><div class="cara-trasera" style="background-image: none; background-color: #1a122a; border-radius: 12px; border: 2px solid #c59b27;"></div><img class="cara-frontal" src="runas_imagenes/${runaSecreta.id}.png" alt="${runaSecreta.nombre}" style="border-radius: 12px; border: 2px solid #c59b27; background-color: #1a122a; object-fit: contain; padding: 5px;"></div>`;
 
-        mesaAbanico.appendChild(cartaContenedor);
-    });
+            cartaContenedor.addEventListener('click', () => {
+                realizarConsultaRunas(1, "runa_odin");
+            });
+            mesaAbanico.appendChild(cartaContenedor);
+        });
+    }
 
     divResultado.appendChild(tituloRitual);
     divResultado.appendChild(descRitual);
@@ -234,80 +308,38 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
     if (!divResultado) return;
     
     setTimeout(async () => {
-        divResultado.innerHTML = "";
-
-        const titulo = document.createElement('strong');
-        titulo.style.color = "#f3d06c";
-        titulo.style.fontSize = "1.2em";
-        titulo.textContent = `✨ Tu Carta del Día: ${cartaElegida} ✨`;
-
-        const contenedorCarta = document.createElement('div');
-        contenedorCarta.className = "contenedor-cartas";
-        const pos = document.createElement('div');
-        pos.className = "posicion-carta";
-        const img = document.createElement('img');
-        img.className = "carta-animada";
-        img.src = `imagenes/${archivoRider}`;
-        img.alt = cartaElegida;
-        pos.appendChild(img);
-        contenedorCarta.appendChild(pos);
-
-        const loader = document.createElement('p');
-        loader.innerHTML = "<em style='color: #f3d06c;'>Canalizando el mensaje del oráculo...</em>";
-
-        divResultado.appendChild(titulo);
-        divResultado.appendChild(contenedorCarta);
-        divResultado.appendChild(loader);
+        divResultado.innerHTML = `<strong>✨ Tu Carta del Día: ${cartaElegida} ✨</strong><div class="contenedor-cartas"><div class="posicion-carta"><img src="imagenes/${archivoRider}" class="carta-animada"></div></div><p><em style='color: #f3d06c;'>Canalizando el mensaje del oráculo...</em></p>`;
 
         try {
             const respuesta = await fetch('/api/consultar-tarot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    pregunta: "Carta del Día",
-                    cartas: [cartaElegida],
-                    idTirada: "1",
-                    cantidadCartas: 1
-                })
+                body: JSON.stringify({ pregunta: "Carta del Día", cartas: [cartaElegida], idTirada: "1", cantidadCartas: 1 })
             });
 
             if (!respuesta.ok) throw new Error("Error en la respuesta del servidor.");
             const datos = await respuesta.json();
 
-            loader.remove();
-
-            const textoReflexion = document.createElement('div');
-            textoReflexion.style.marginTop = "15px";
-            textoReflexion.innerHTML = formatearTextoMarkdown(datos.lectura);
-            divResultado.appendChild(textoReflexion);
-
+            divResultado.innerHTML = `<strong>✨ Tu Carta del Día: ${cartaElegida} ✨</strong><div class="contenedor-cartas"><div class="posicion-carta"><img src="imagenes/${archivoRider}" class="carta-animada"></div></div><div style="margin-top: 15px;">${formatearTextoMarkdown(datos.lectura)}</div>`;
             crearBotonProfundizar(divResultado);
 
         } catch (error) {
-            loader.innerHTML = "<span style='color: #ff6b6b;'>No se pudo obtener el mensaje de la Carta del Día en este momento.</span>";
+            divResultado.innerHTML += "<span style='color: #ff6b6b;'>No se pudo obtener el mensaje en este momento.</span>";
         }
     }, 1000);
 }
 
-// --- CONSULTA GENERAL DE TAROT ---
+// --- CONSULTAS DE API ---
 async function realizarConsultaTarot(cantidadCartas, idTirada) {
     const preguntaInput = document.getElementById('preguntaUsuario');
     const pregunta = preguntaInput ? preguntaInput.value : "";
     const divResultado = document.getElementById('resultado');
 
-    if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
-    if (pantallaTiradas) pantallaTiradas.style.display = "none";
     if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
     if (pantallaLectura) pantallaLectura.style.display = "flex";
 
-    const btnOtraConsulta = document.getElementById('btnHacerOtraConsulta');
-    if (btnOtraConsulta) btnOtraConsulta.style.display = ""; 
-
     if (!divResultado) return;
-    divResultado.innerHTML = "";
-    const loader = document.createElement('p');
-    loader.innerHTML = "<strong style='color: #f3d06c;'>Barajando el mazo y canalizando la energía... 🔮</strong>";
-    divResultado.appendChild(loader);
+    divResultado.innerHTML = "<p><strong style='color: #f3d06c;'>Barajando el mazo y canalizando la energía... 🔮</strong></p>";
 
     const mazoMezclado = mezclarMazo(mazo);
     const cartasSeleccionadas = mazoMezclado.slice(0, cantidadCartas);
@@ -331,66 +363,27 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ pregunta, cartas: cartasSeleccionadas, idTirada, cantidadCartas })
         });
-
         if (!respuesta.ok) throw new Error("Error en el servidor.");
-
         const datos = await respuesta.json();
-        divResultado.innerHTML = "";
-
-        const tituloPregunta = document.createElement('h3');
-        tituloPregunta.style.color = "#f3d06c";
-        tituloPregunta.textContent = `Tu Pregunta: ${pregunta}`;
-        divResultado.appendChild(tituloPregunta);
-
-        const contenedorCartas = document.createElement('div');
-        contenedorCartas.className = claseMesa;
-
-        cartasSeleccionadas.forEach((carta, index) => {
-            const pos = document.createElement('div');
-            pos.className = `posicion-carta pos-${index + 1}`;
-            
-            const img = document.createElement('img');
-            img.src = `imagenes/${imagenesRiderWaite[carta]}`;
-            img.className = 'carta-animada';
-            img.style.animationDelay = `${index * 0.2}s`;
-            img.alt = carta;
-            
-            pos.appendChild(img);
-            contenedorCartas.appendChild(pos);
-        });
-        divResultado.appendChild(contenedorCartas);
-
-        const textoIA = document.createElement('div');
-        textoIA.style.marginTop = "15px";
-        textoIA.innerHTML = formatearTextoMarkdown(datos.lectura);
-        divResultado.appendChild(textoIA);
-
+        
+        divResultado.innerHTML = `<h3 style="color: #f3d06c;">Tu Pregunta: ${pregunta}</h3><div class="${claseMesa}">` + 
+            cartasSeleccionadas.map((carta, index) => `<div class="posicion-carta pos-${index + 1}"><img src="imagenes/${imagenesRiderWaite[carta]}" class="carta-animada" style="animation-delay: ${index * 0.2}s" alt="${carta}"></div>`).join('') +
+            `</div><div style="margin-top: 15px;">${formatearTextoMarkdown(datos.lectura)}</div>`;
+        
         crearBotonProfundizar(divResultado);
-
-    } catch (error) {
-        divResultado.innerHTML = "<p style='color: #ff6b6b;'>Hubo un problema de conexión al procesar la lectura.</p>";
-    }
+    } catch (error) { divResultado.innerHTML = "<p style='color: #ff6b6b;'>Error al procesar la lectura.</p>"; }
 }
 
-// --- CONSULTA DE RUNAS VIKINGAS ---
 async function realizarConsultaRunas(cantidadRunas, idTirada) {
     const preguntaInput = document.getElementById('preguntaUsuario');
     const pregunta = preguntaInput ? preguntaInput.value : "";
     const divResultado = document.getElementById('resultado');
 
-    if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
-    if (pantallaTiradas) pantallaTiradas.style.display = "none";
     if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
     if (pantallaLectura) pantallaLectura.style.display = "flex";
 
-    const btnOtraConsulta = document.getElementById('btnHacerOtraConsulta');
-    if (btnOtraConsulta) btnOtraConsulta.style.display = ""; 
-
     if (!divResultado) return;
-    divResultado.innerHTML = "";
-    const loader = document.createElement('p');
-    loader.innerHTML = "<strong style='color: #f3d06c;'>Tallando y arrojando las runas sagradas... ᛟ</strong>";
-    divResultado.appendChild(loader);
+    divResultado.innerHTML = "<p><strong style='color: #f3d06c;'>Tallando y arrojando las runas sagradas... ᛟ</strong></p>";
 
     const runasMezcladas = mezclarRunas(mazoRunas);
     const runasSeleccionadas = runasMezcladas.slice(0, cantidadRunas);
@@ -399,8 +392,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
     ultimasCartas = runasSeleccionadas.map(r => r.nombre);
 
     let claseMesaRunas = "mesa-runas-lineal";
-    if (idTirada === "runa_odin" || idTirada === "nornas") claseMesaRunas = "mesa-runas-lineal";
-    else if (idTirada === "cruz_runica") claseMesaRunas = "mesa-cruz-runica";
+    if (idTirada === "cruz_runica") claseMesaRunas = "mesa-cruz-runica";
     else if (idTirada === "tirada_5") claseMesaRunas = "mesa-tirada-5-runas";
     else if (idTirada === "cruz_celta") claseMesaRunas = "mesa-cruz-celta-runas";
     else if (idTirada === "martillo_thor") claseMesaRunas = "mesa-martillo-thor";
@@ -411,65 +403,29 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         const respuesta = await fetch('/api/consultar-runas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                pregunta, 
-                runas: ultimasCartas, 
-                idTirada, 
-                cantidadRunas 
-            })
+            body: JSON.stringify({ pregunta, runas: ultimasCartas, idTirada, cantidadRunas })
         });
-
-        if (!respuesta.ok) throw new Error("Error en el servidor de runas.");
-
+        if (!respuesta.ok) throw new Error("Error en el servidor.");
         const datos = await respuesta.json();
-        divResultado.innerHTML = "";
-
-        const tituloPregunta = document.createElement('h3');
-        tituloPregunta.style.color = "#f3d06c";
-        tituloPregunta.textContent = `Tu Consulta Rúnica: ${pregunta}`;
-        divResultado.appendChild(tituloPregunta);
-
-        const contenedorRunas = document.createElement('div');
-        contenedorRunas.className = claseMesaRunas;
-
+        
+        let HTMLRunas = `<h3 style="color: #f3d06c;">Tu Consulta Rúnica: ${pregunta}</h3><div class="${claseMesaRunas}">`;
+        
         runasSeleccionadas.forEach((runa, index) => {
-            const ficha = document.createElement('div');
-            ficha.className = "runa-ficha";
-            ficha.style.animation = `aparecerCarta 0.6s ease-out ${index * 0.2}s forwards`;
-
-            if (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") {
-                ficha.style.gridArea = `runa${index + 1}`;
-            }
-
-            const imgRuna = document.createElement('img');
-            imgRuna.src = `runas_imagenes/${runa.id}.png`;
-            imgRuna.alt = runa.nombre;
-            imgRuna.className = "img-runa";
-
-            const nombreRuna = document.createElement('strong');
-            nombreRuna.style.display = "block";
-            nombreRuna.style.fontFamily = "'Playfair Display', serif";
-            nombreRuna.style.fontSize = "0.95em";
-            nombreRuna.textContent = `${index + 1}. ${runa.nombre}`;
-
-            ficha.appendChild(imgRuna);
-            ficha.appendChild(nombreRuna);
-            contenedorRunas.appendChild(ficha);
+            let gridArea = (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") ? `grid-area: runa${index + 1};` : "";
+            HTMLRunas += `
+                <div class="runa-ficha" style="animation: aparecerCarta 0.6s ease-out ${index * 0.2}s forwards; ${gridArea}">
+                    <img src="runas_imagenes/${runa.id}.png" alt="${runa.nombre}" class="img-runa">
+                    <strong style="display: block; font-family: 'Playfair Display', serif; font-size: 0.95em;">${index + 1}. ${runa.nombre}</strong>
+                </div>`;
         });
+        HTMLRunas += `</div><div style="margin-top: 15px;">${formatearTextoMarkdown(datos.lectura)}</div>`;
+        
+        divResultado.innerHTML = HTMLRunas;
+        crearBotonProfundizar(divResultado);
 
-        divResultado.appendChild(contenedorRunas);
-
-        const textoIA = document.createElement('div');
-        textoIA.style.marginTop = "15px";
-        textoIA.innerHTML = formatearTextoMarkdown(datos.lectura);
-        divResultado.appendChild(textoIA);
-
-    } catch (error) {
-        divResultado.innerHTML = "<p style='color: #ff6b6b;'>Hubo un problema de conexión al procesar la lectura rúnica.</p>";
-    }
+    } catch (error) { divResultado.innerHTML = "<p style='color: #ff6b6b;'>Error al procesar la lectura rúnica.</p>"; }
 }
 
-// --- LÓGICA DEL BOTÓN DE PROFUNDIZACIÓN ---
 function crearBotonProfundizar(contenedor) {
     const btn = document.createElement('button');
     btn.className = 'btn-profundizar';
@@ -492,25 +448,15 @@ function crearBotonProfundizar(contenedor) {
             const respuesta = await fetch('/api/profundizar-tarot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    pregunta: ultimaPregunta, 
-                    cartas: ultimasCartas 
-                })
+                body: JSON.stringify({ pregunta: ultimaPregunta, cartas: ultimasCartas })
             });
-
             if (!respuesta.ok) throw new Error("Error al profundizar la lectura.");
-
             const datos = await respuesta.json();
-            seccionProfundizacion.innerHTML = `
-                <strong style='color: #f3d06c; font-family: "Playfair Display", serif; font-size: 1.2em;'>✨ Clarificación y Profundización del Oráculo:</strong><br><br>
-                ${formatearTextoMarkdown(datos.profundizacion)}
-            `;
-
+            
+            seccionProfundizacion.innerHTML = `<strong style='color: #f3d06c; font-family: "Playfair Display", serif; font-size: 1.2em;'>✨ Clarificación y Profundización del Oráculo:</strong><br><br>${formatearTextoMarkdown(datos.profundizacion)}`;
             seccionProfundizacion.scrollIntoView({ behavior: 'smooth' });
 
-        } catch (error) {
-            seccionProfundizacion.innerHTML = "<span style='color: #ff6b6b;'>No se pudo conectar para profundizar la lectura en este momento. Verificá la conexión con el servidor.</span>";
-        }
+        } catch (error) { seccionProfundizacion.innerHTML = "<span style='color: #ff6b6b;'>No se pudo conectar para profundizar en este momento.</span>"; }
     });
 
     contenedor.appendChild(btn);
