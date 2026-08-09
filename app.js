@@ -18,18 +18,20 @@ function formatearTextoMarkdown(texto) {
 const audio = document.getElementById('audioFondo');
 const btnAudio = document.getElementById('btnAudio');
 
-btnAudio.addEventListener('click', () => {
-    if (audio.paused) {
-        audio.play().then(() => {
-            btnAudio.textContent = "🔇 Silenciar Sonido";
-        }).catch(() => {
-            alert("El navegador requiere interacción previa para reproducir sonido.");
-        });
-    } else {
-        audio.pause();
-        btnAudio.textContent = "🎵 Activar Sonido";
-    }
-});
+if (btnAudio) {
+    btnAudio.addEventListener('click', () => {
+        if (audio.paused) {
+            audio.play().then(() => {
+                btnAudio.textContent = "🔇 Silenciar Sonido";
+            }).catch(() => {
+                alert("El navegador requiere interacción previa para reproducir sonido.");
+            });
+        } else {
+            audio.pause();
+            btnAudio.textContent = "🎵 Activar Sonido";
+        }
+    });
+}
 
 // --- NAVEGACIÓN ENTRE PANTALLAS ---
 const pantallaBienvenida = document.getElementById('pantalla-bienvenida');
@@ -63,12 +65,12 @@ document.querySelectorAll('.btn-volver-inicio').forEach(btn => {
         pantallaTiradas.style.display = "none";
         pantallaRecomendacion.style.display = "none";
         pantallaLectura.style.display = "none";
-        document.getElementById('preguntaUsuario').value = "";
+        const inputPregunta = document.getElementById('preguntaUsuario');
+        if (inputPregunta) inputPregunta.value = "";
     });
 });
 
 // --- SOLUCIÓN AL BOTÓN DE CAMBIAR PREGUNTA / OTRA CONSULTA ---
-// Agrupamos cualquier botón que sirva para hacer otra consulta y nos aseguramos de que mantenga el contexto
 const botonesOtraConsulta = document.querySelectorAll('#btnCambiarPregunta, #btnHacerOtraConsulta, .btn-otra-consulta');
 
 botonesOtraConsulta.forEach(btn => {
@@ -78,7 +80,6 @@ botonesOtraConsulta.forEach(btn => {
         pantallaRecomendacion.style.display = "none";
         pantallaLectura.style.display = "none";
         
-        // Limpiamos la pregunta anterior
         const inputPregunta = document.getElementById('preguntaUsuario');
         if (inputPregunta) inputPregunta.value = "";
 
@@ -91,10 +92,10 @@ botonesOtraConsulta.forEach(btn => {
     });
 });
 
-// --- GENERACIÓN DEL CARRUSEL (DEPENDIENDO SI ES TAROT O RUNAS) ---
+// --- GENERACIÓN DEL CARRUSEL ---
 document.getElementById('btnMostrarOpciones').addEventListener('click', () => {
-    const pregunta = document.getElementById('preguntaUsuario').value;
-    if (!pregunta.trim()) {
+    const pregunta = document.getElementById('preguntaUsuario');
+    if (pregunta && !pregunta.value.trim()) {
         alert("Por favor, escribí tu consulta antes de continuar.");
         return;
     }
@@ -163,6 +164,12 @@ document.getElementById('btnRitualDia').addEventListener('click', () => {
     pantallaTiradas.style.display = "none";
     pantallaRecomendacion.style.display = "none";
     pantallaLectura.style.display = "flex";
+
+    // OCULTAMOS EL BOTÓN DE OTRA CONSULTA SOLO PARA ESTE RITUAL
+    const btnOtraConsulta = document.getElementById('btnHacerOtraConsulta');
+    if (btnOtraConsulta) {
+        btnOtraConsulta.style.display = "none";
+    }
 
     const divResultado = document.getElementById('resultado');
     divResultado.innerHTML = "";
@@ -292,6 +299,12 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
     pantallaRecomendacion.style.display = "none";
     pantallaLectura.style.display = "flex";
 
+    // NOS ASEGURAMOS QUE EL BOTÓN VUELVA A APARECER PARA TIRADAS NORMALES
+    const btnOtraConsulta = document.getElementById('btnHacerOtraConsulta');
+    if (btnOtraConsulta) {
+        btnOtraConsulta.style.display = ""; 
+    }
+
     divResultado.innerHTML = "";
     const loader = document.createElement('p');
     loader.innerHTML = "<strong style='color: #f3d06c;'>Barajando el mazo y canalizando la energía... 🔮</strong>";
@@ -370,6 +383,12 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
     pantallaRecomendacion.style.display = "none";
     pantallaLectura.style.display = "flex";
 
+    // NOS ASEGURAMOS QUE EL BOTÓN VUELVA A APARECER PARA TIRADAS NORMALES
+    const btnOtraConsulta = document.getElementById('btnHacerOtraConsulta');
+    if (btnOtraConsulta) {
+        btnOtraConsulta.style.display = ""; 
+    }
+
     divResultado.innerHTML = "";
     const loader = document.createElement('p');
     loader.innerHTML = "<strong style='color: #f3d06c;'>Tallando y arrojando las runas sagradas... ᛟ</strong>";
@@ -426,7 +445,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             ficha.style.boxShadow = "0 8px 20px rgba(0,0,0,0.8)";
             ficha.style.animation = `aparecerCarta 0.6s ease-out ${index * 0.2}s forwards`;
 
-            // === LÓGICA GEOMÉTRICA DE RUNAS AGREGADA ===
+            // === LÓGICA GEOMÉTRICA DE RUNAS ===
             if (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil") {
                 ficha.style.gridArea = `runa${index + 1}`;
             }
