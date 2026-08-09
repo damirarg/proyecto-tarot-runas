@@ -397,16 +397,16 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     margin-bottom: 8px;
 }
 
-/* YGGDRASIL - LA MATRIZ SINTÁCTICA CORREGIDA */
+/* YGGDRASIL - MATRIZ DE 5x5 PERFECTA Y SIMÉTRICA */
 .mesa-yggdrasil {
     display: grid;
-    grid-template-columns: auto auto auto;
+    grid-template-columns: repeat(5, auto);
     grid-template-areas:
-        "runa3 . runa4"
-        "runa5 runa2 runa6"
-        ". runa1 ."
-        "runa7 . runa9"
-        ". runa8 .";
+        ". runa3 . runa4 ."
+        "runa5 . runa2 . runa6"
+        ". . runa1 . ."
+        ". runa7 . runa9 ."
+        ". . runa8 . .";
     gap: 15px;
     justify-content: center;
     align-items: center;
@@ -427,7 +427,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 }
 .mesa-cruz-runica .runa-ficha { justify-self: center; }
 
-/* CRUZ CELTA RUNAS (Corregida) */
+/* CRUZ CELTA RUNAS */
 .mesa-cruz-celta-runas {
     display: grid;
     grid-template-areas:
@@ -449,7 +449,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     gap: 10px;
 }
 
-/* TIRADA 7 RUNAS (MIMIR) CON EXCELENTE DISTRIBUCIÓN */
+/* TIRADA 7 RUNAS (MIMIR) */
 .mesa-tirada-7-runas {
     display: grid;
     grid-template-columns: auto auto 20px auto auto 20px auto auto;
