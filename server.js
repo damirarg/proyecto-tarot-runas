@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// La clave se lee de manera totalmente privada
+// La clave de la API se lee de las variables de entorno de Render
 const API_KEY_GROQ = process.env.GROQ_API_KEY;
 
 app.use(express.json());
@@ -64,8 +64,9 @@ app.post('/api/consultar-tarot', async (req, res) => {
 
         if (!respuestaGroq.ok) {
             const detalleError = await respuestaGroq.text();
-            console.error("Error en API Groq:", respuestaGroq.status, detalleError);
-            return res.status(respuestaGroq.status).json({ error: "Error en la respuesta de la API." });
+            console.error("Error en API Groq (Tarot):", respuestaGroq.status, detalleError);
+            // Ahora enviamos el error técnico exacto al frontend
+            return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
         }
 
         const datos = await respuestaGroq.json();
@@ -73,7 +74,7 @@ app.post('/api/consultar-tarot', async (req, res) => {
 
     } catch (error) {
         console.error("Error interno:", error);
-        res.status(500).json({ error: "Error interno del servidor." });
+        res.status(500).json({ error: "Error interno del servidor Node.js." });
     }
 });
 
@@ -104,8 +105,8 @@ app.post('/api/profundizar-tarot', async (req, res) => {
 
         if (!respuestaGroq.ok) {
             const detalleError = await respuestaGroq.text();
-            console.error("Error en API Groq profundización:", respuestaGroq.status, detalleError);
-            return res.status(respuestaGroq.status).json({ error: "Error en la API al profundizar." });
+            console.error("Error en API Groq (Profundización):", respuestaGroq.status, detalleError);
+            return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
         }
 
         const datos = await respuestaGroq.json();
@@ -113,7 +114,7 @@ app.post('/api/profundizar-tarot', async (req, res) => {
 
     } catch (error) {
         console.error("Error interno en profundización:", error);
-        res.status(500).json({ error: "Error interno en la profundización." });
+        res.status(500).json({ error: "Error interno en el servidor de profundización." });
     }
 });
 
@@ -210,8 +211,8 @@ app.post('/api/consultar-runas', async (req, res) => {
 
         if (!respuestaGroq.ok) {
             const detalleError = await respuestaGroq.text();
-            console.error("Error en API Groq (consultar-runas):", respuestaGroq.status, detalleError);
-            return res.status(respuestaGroq.status).json({ error: "Error en la respuesta de la API de Runas." });
+            console.error("Error en API Groq (Runas):", respuestaGroq.status, detalleError);
+            return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
         }
 
         const datos = await respuestaGroq.json();
@@ -219,10 +220,10 @@ app.post('/api/consultar-runas', async (req, res) => {
 
     } catch (error) {
         console.error("Error interno en /api/consultar-runas:", error);
-        res.status(500).json({ error: "Error interno del servidor al consultar runas." });
+        res.status(500).json({ error: "Error interno del servidor Node.js al consultar runas." });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`✨ Servidor de Tarot y Runas corriendo con éxito en http://localhost:${PORT}`);
+    console.log(`✨ Servidor corriendo con éxito en http://localhost:${PORT}`);
 });
