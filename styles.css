@@ -294,11 +294,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 }
 
 /* --- DISPOSICIONES GEOMÉTRICAS DE MESAS (ESPECIALES DE TAROT) --- */
-
-.mesa-pasado-presente-futuro {
-    display: flex; flex-direction: row; justify-content: center;
-    align-items: center; gap: 18px;
-}
+.mesa-pasado-presente-futuro { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 18px; }
 .mesa-pasado-presente-futuro .posicion-carta { width: 115px; height: 195px; }
 
 .mesa-espejo { display: grid; grid-template-columns: repeat(2, auto); gap: 10px; justify-content: center; justify-items: center; }
@@ -376,6 +372,25 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     flex-wrap: wrap;
 }
 
+/* Ficha universal de runas (tamaños manejados 100% desde CSS para evitar desbordes) */
+.runa-ficha {
+    background: linear-gradient(145deg, #2a2533, #15101f);
+    border: 2px solid #c59b27;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    color: #f3d06c;
+    width: 100px;
+    box-sizing: border-box;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+}
+.img-runa {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    margin-bottom: 8px;
+}
+
 .mesa-yggdrasil {
     display: grid;
     grid-template-areas:
@@ -386,6 +401,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
         ". runa8 .";
     gap: 15px;
     justify-content: center;
+    align-items: center;
     margin: 20px auto;
 }
 
@@ -410,6 +426,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
         ". runa4 .";
     gap: 15px;
     justify-content: center;
+    align-items: center;
     margin: 20px auto;
 }
 
@@ -420,34 +437,35 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     gap: 10px;
 }
 
-/* NUEVA MESA: TIRADA 7 RUNAS (MIMIR) */
+/* NUEVA MESA: TIRADA 7 RUNAS (MIMIR) CON EXCELENTE DISTRIBUCIÓN */
 .mesa-tirada-7-runas {
     display: grid;
-    grid-template-columns: repeat(6, auto);
+    /* Creamos un grid de 8 columnas imaginarias. Esto nos permite separar perfectamente los pares. */
+    grid-template-columns: 1fr 1fr 0.4fr 1fr 1fr 0.4fr 1fr 1fr;
     grid-template-areas:
-        "runa1 runa2 runa3 runa4 runa5 runa6"
-        ". . runa7 runa7 . .";
-    gap: 15px 12px;
+        "runa1 runa2 . runa3 runa4 . runa5 runa6"
+        ". . . runa7 runa7 . . .";
+    gap: 12px;
     justify-content: center;
     align-items: center;
     margin: 20px auto;
+    width: 100%;
+    max-width: 700px;
 }
 
-/* Separamos visualmente los pares (Pasado, Presente, Futuro) */
-.mesa-tirada-7-runas > div:nth-child(2),
-.mesa-tirada-7-runas > div:nth-child(4) {
-    margin-right: 25px;
+/* Aseguramos que la ficha se adapte al contenedor sin desbordarse */
+.mesa-tirada-7-runas .runa-ficha {
+    width: 100%; 
+    max-width: 90px; 
+    padding: 8px; 
+    margin: 0 auto;
 }
 
-.runa-ficha {
-    background: #1a122a;
-    border: 2px solid #c59b27;
-    border-radius: 12px;
-    padding: 10px;
-    text-align: center;
-    color: #f3d06c;
-    width: 100px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+.mesa-tirada-7-runas .img-runa {
+    width: 100%;
+    max-width: 60px;
+    height: auto;
+    aspect-ratio: 1/1;
 }
 
 #resultado {
@@ -500,9 +518,8 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     .mesa-cruz-celta .posicion-carta { width: 55px; height: 95px; }
     .btn-flecha-carrusel { width: 30px; height: 30px; font-size: 1.1em; }
     
-    .mesa-tirada-7-runas { gap: 10px 5px; }
-    .mesa-tirada-7-runas > div:nth-child(2),
-    .mesa-tirada-7-runas > div:nth-child(4) {
-        margin-right: 10px;
-    }
+    /* Adaptación clave para que la tirada de 7 runas entre perfecto en el celular */
+    .mesa-tirada-7-runas { gap: 6px; }
+    .mesa-tirada-7-runas .runa-ficha { padding: 4px; border-radius: 8px; }
+    .mesa-tirada-7-runas strong { font-size: 0.8em; }
 }

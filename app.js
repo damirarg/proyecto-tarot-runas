@@ -436,18 +436,10 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
 
         runasSeleccionadas.forEach((runa, index) => {
             const ficha = document.createElement('div');
-            ficha.style.background = "linear-gradient(145deg, #2a2533, #15101f)";
-            ficha.style.border = "2px solid #c59b27";
-            ficha.style.borderRadius = "12px";
-            ficha.style.padding = "12px";
-            ficha.style.textAlign = "center";
-            ficha.style.color = "#f3d06c";
-            // Ajustamos un poco el ancho para que no desborde en la tirada de 7
-            ficha.style.width = "95px"; 
-            ficha.style.boxShadow = "0 8px 20px rgba(0,0,0,0.8)";
+            ficha.className = 'runa-ficha';
             ficha.style.animation = `aparecerCarta 0.6s ease-out ${index * 0.2}s forwards`;
 
-            // === LÓGICA GEOMÉTRICA DE RUNAS AGREGADA ===
+            // === LÓGICA GEOMÉTRICA DE RUNAS ===
             if (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") {
                 ficha.style.gridArea = `runa${index + 1}`;
             }
@@ -455,10 +447,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             const imgRuna = document.createElement('img');
             imgRuna.src = `runas_imagenes/${runa.id}.png`;
             imgRuna.alt = runa.nombre;
-            imgRuna.style.width = "75px"; // Ajustado para mantener la proporción
-            imgRuna.style.height = "75px";
-            imgRuna.style.objectFit = "contain";
-            imgRuna.style.marginBottom = "8px";
+            imgRuna.className = 'img-runa';
 
             const nombreRuna = document.createElement('strong');
             nombreRuna.style.display = "block";
