@@ -93,7 +93,7 @@ const pantallaRecomendacion = document.getElementById('pantalla-recomendacion');
 const pantallaLectura = document.getElementById('pantalla-lectura');
 const contenedorPrincipal = document.getElementById('contenedor-principal');
 
-// Portales Principales
+// Portales Principales (Estilo Tarotoo)
 document.getElementById('btnPortalTarot')?.addEventListener('click', () => {
     modoActual = "tarot";
     document.body.className = 'bg-tarot'; 
@@ -101,7 +101,7 @@ document.getElementById('btnPortalTarot')?.addEventListener('click', () => {
     detenerNieve();
     manejarAudioPorReino();
     
-    // CAMBIO DINÁMICO DE EMOJI PARA EL TAROT (Puerta Mística)
+    // Asignamos la puerta al botón de salir del Tarot
     document.querySelectorAll('.btn-salir-reino').forEach(btn => {
         btn.textContent = "🚪 Salir del Reino";
     });
@@ -126,7 +126,7 @@ document.getElementById('btnPortalRunas')?.addEventListener('click', () => {
     iniciarNieve();
     manejarAudioPorReino();
     
-    // CAMBIO DINÁMICO DE EMOJI PARA LAS RUNAS (Casco Vikingo / Escudo)
+    // Asignamos el casco nórdico al botón de salir de las Runas
     document.querySelectorAll('.btn-salir-reino').forEach(btn => {
         btn.textContent = "🪖 Salir del Reino";
     });
@@ -144,7 +144,7 @@ document.getElementById('btnPortalRunas')?.addEventListener('click', () => {
     if (textoRitualDia) textoRitualDia.textContent = "Runa del Día";
 });
 
-// Botones "Salir del Reino" (regresan al Gran Salón de Portales)
+// Botones "Salir del Reino" (regresan a la Landing Page)
 document.querySelectorAll('.btn-salir-reino').forEach(btn => {
     btn.addEventListener('click', () => {
         document.body.className = 'bg-general'; 
@@ -183,7 +183,7 @@ document.getElementById('btnIrTiradas')?.addEventListener('click', () => {
     if (pantallaTiradas) pantallaTiradas.style.display = "flex";
 });
 
-// Botón Hacer Otra Consulta (te manda a ingresar pregunta dentro del mismo reino)
+// Botón Hacer Otra Consulta
 const botonesOtraConsulta = document.querySelectorAll('#btnCambiarPregunta, #btnHacerOtraConsulta');
 botonesOtraConsulta.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -454,7 +454,6 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         runasSeleccionadas.forEach((runa, index) => {
             let gridArea = (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") ? `grid-area: runa${index + 1};` : "";
             
-            // CAMBIO APLICADO: Separamos el número y el nombre de la runa en dos renglones
             HTMLRunas += `
                 <div class="runa-ficha" style="animation: aparecerCarta 0.6s ease-out ${index * 0.2}s forwards; ${gridArea}">
                     <img src="runas_imagenes/${runa.id}.png" alt="${runa.nombre}" class="img-runa">

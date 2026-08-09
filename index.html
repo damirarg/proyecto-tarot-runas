@@ -21,16 +21,44 @@
 
     <div id="contenedor-principal" class="contenedor-principal">
         
-        <!-- PANTALLA 1: LANDING PAGE MINIMALISTA -->
-        <div id="pantalla-portales" style="display: flex; justify-content: center; align-items: center; width: 100%; min-height: 60vh;">
-            <div class="contenedor-portales">
-                <button id="btnPortalTarot" class="btn-portal portal-tarot">
-                    <h2>Reino del Tarot</h2>
-                </button>
-                <button id="btnPortalRunas" class="btn-portal portal-runas">
-                    <h2>Reino de las Runas</h2>
-                </button>
+        <!-- PANTALLA 1: LANDING PAGE MÍSTICA (ESTILO TAROTOO) -->
+        <div id="pantalla-portales" style="display: flex; flex-direction: column; justify-content: space-between; align-items: center; width: 100%; min-height: 80vh;">
+            
+            <!-- Orbes decorativos de fondo -->
+            <div class="orbe-mistico orbe-izq"></div>
+            <div class="orbe-mistico orbe-der"></div>
+
+            <div style="text-align: center; margin-bottom: 20px; z-index: 2;">
+                <h1 style="font-size: 3.5em; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 0;">Oráculos</h1>
+                <p style="color: #bfaee3; font-size: 1.4em; margin-top: 10px; font-style: italic;">Haga su elección</p>
             </div>
+
+            <div class="contenedor-cartas-portal" style="z-index: 2;">
+                <div class="carta-portal" id="btnPortalTarot">
+                    <div class="interior-carta">
+                        <div class="icono-portal">✨</div>
+                        <h2>Tarot<br>Profundo</h2>
+                    </div>
+                </div>
+
+                <div class="carta-portal" id="btnPortalRunas">
+                    <div class="interior-carta">
+                        <div class="icono-portal">ᛟ</div>
+                        <h2>Sabiduría<br>Nórdica</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Legal y Enlaces -->
+            <footer class="footer-inicio" style="z-index: 2;">
+                <p>Esta plataforma es solo para fines de entretenimiento y autorreflexión. Debes tener 18 años o más.</p>
+                <p>No ofrecemos asesoramiento médico, jurídico o financiero. Consulta a un profesional cualificado para asuntos importantes.</p>
+                <div class="links-footer">
+                    <span>Cómo funciona</span>
+                    <span>Preguntas frecuentes y Ayuda</span>
+                    <span>Contáctanos</span>
+                </div>
+            </footer>
         </div>
 
         <!-- PANTALLA 2: BIENVENIDA AL REINO -->
@@ -57,7 +85,6 @@
             <h2 style="color: #f3d06c; font-family: 'Playfair Display', serif; text-align: center;">Ingresa tu Inquietud</h2>
             <textarea id="preguntaUsuario" rows="4" placeholder="Concéntrate en tu pregunta y escríbela aquí..."></textarea>
             
-            <!-- CAMBIO APLICADO: "Ver Tiradas Disponibles" -->
             <button id="btnMostrarOpciones" class="btn-principal" style="margin-top: 20px;">Ver Tiradas Disponibles</button>
             
             <div style="display: flex; gap: 15px; margin-top: 15px; width: 100%;">
