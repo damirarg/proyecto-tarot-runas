@@ -22,7 +22,7 @@ const btnAudio = document.getElementById('btnAudio');
 
 function manejarAudioPorReino() {
     if (!btnAudio) return;
-    btnAudio.style.display = "block"; // Mostramos el botón de audio al entrar al reino
+    btnAudio.style.display = "block"; 
     if (btnAudio.textContent.includes("Activar")) return; 
     
     if (modoActual === "tarot") {
@@ -37,7 +37,7 @@ function manejarAudioPorReino() {
 function detenerTodoElAudio() {
     if (audioTarot) audioTarot.pause();
     if (audioRunas) audioRunas.pause();
-    if (btnAudio) btnAudio.style.display = "none"; // Ocultamos el botón en el inicio
+    if (btnAudio) btnAudio.style.display = "none"; 
 }
 
 if (btnAudio) {
@@ -246,8 +246,7 @@ function ejecutarTiradaElegida(idTirada) {
         else if (idTirada === "nornas") cantidadRunas = 3;
         else if (idTirada === "cruz_runica") cantidadRunas = 4;
         else if (idTirada === "tirada_5") cantidadRunas = 5;
-        else if (idTirada === "cruz_celta") cantidadRunas = 6;
-        else if (idTirada === "martillo_thor") cantidadRunas = 6;
+        else if (idTirada === "cruz_celta" || idTirada === "martillo_thor") cantidadRunas = 6;
         else if (idTirada === "tirada_7") cantidadRunas = 7;
         else if (idTirada === "yggdrasil") cantidadRunas = 9;
 
@@ -331,14 +330,18 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
                 body: JSON.stringify({ pregunta: "Carta del Día", cartas: [cartaElegida], idTirada: "1", cantidadCartas: 1 })
             });
 
-            if (!respuesta.ok) throw new Error("Error en la respuesta del servidor.");
+            if (!respuesta.ok) {
+                const errorData = await respuesta.json().catch(() => ({}));
+                throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
+            }
             const datos = await respuesta.json();
 
             divResultado.innerHTML = `<strong>✨ Tu Carta del Día: ${cartaElegida} ✨</strong><div class="contenedor-cartas"><div class="posicion-carta"><img src="imagenes/${archivoRider}" class="carta-animada"></div></div><div style="margin-top: 15px;">${formatearTextoMarkdown(datos.lectura)}</div>`;
             crearBotonProfundizar(divResultado);
 
         } catch (error) {
-            divResultado.innerHTML += "<span style='color: #ff6b6b;'>No se pudo obtener el mensaje en este momento.</span>";
+            console.error("Error detectado:", error);
+            divResultado.innerHTML += `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
         }
     }, 1000);
 }
@@ -377,7 +380,12 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ pregunta, cartas: cartasSeleccionadas, idTirada, cantidadCartas })
         });
-        if (!respuesta.ok) throw new Error("Error en el servidor.");
+        
+        if (!respuesta.ok) {
+            const errorData = await respuesta.json().catch(() => ({}));
+            throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
+        }
+        
         const datos = await respuesta.json();
         
         divResultado.innerHTML = `<h3 style="color: #f3d06c;">Tu Pregunta: ${pregunta}</h3><div class="${claseMesa}">` + 
@@ -385,7 +393,10 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
             `</div><div style="margin-top: 15px;">${formatearTextoMarkdown(datos.lectura)}</div>`;
         
         crearBotonProfundizar(divResultado);
-    } catch (error) { divResultado.innerHTML = "<p style='color: #ff6b6b;'>Error al procesar la lectura.</p>"; }
+    } catch (error) { 
+        console.error("Error detectado:", error);
+        divResultado.innerHTML = `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`; 
+    }
 }
 
 async function realizarConsultaRunas(cantidadRunas, idTirada) {
@@ -419,7 +430,12 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ pregunta, runas: ultimasCartas, idTirada, cantidadRunas })
         });
-        if (!respuesta.ok) throw new Error("Error en el servidor.");
+        
+        if (!respuesta.ok) {
+            const errorData = await respuesta.json().catch(() => ({}));
+            throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
+        }
+        
         const datos = await respuesta.json();
         
         let HTMLRunas = `<h3 style="color: #f3d06c;">Tu Consulta Rúnica: ${pregunta}</h3><div class="${claseMesaRunas}">`;
@@ -437,7 +453,10 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         divResultado.innerHTML = HTMLRunas;
         crearBotonProfundizar(divResultado);
 
-    } catch (error) { divResultado.innerHTML = "<p style='color: #ff6b6b;'>Error al procesar la lectura rúnica.</p>"; }
+    } catch (error) { 
+        console.error("Error detectado:", error);
+        divResultado.innerHTML = `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`; 
+    }
 }
 
 function crearBotonProfundizar(contenedor) {
@@ -464,13 +483,21 @@ function crearBotonProfundizar(contenedor) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pregunta: ultimaPregunta, cartas: ultimasCartas })
             });
-            if (!respuesta.ok) throw new Error("Error al profundizar la lectura.");
+            
+            if (!respuesta.ok) {
+                const errorData = await respuesta.json().catch(() => ({}));
+                throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
+            }
+            
             const datos = await respuesta.json();
             
             seccionProfundizacion.innerHTML = `<strong style='color: #f3d06c; font-family: "Playfair Display", serif; font-size: 1.2em;'>✨ Clarificación y Profundización del Oráculo:</strong><br><br>${formatearTextoMarkdown(datos.profundizacion)}`;
             seccionProfundizacion.scrollIntoView({ behavior: 'smooth' });
 
-        } catch (error) { seccionProfundizacion.innerHTML = "<span style='color: #ff6b6b;'>No se pudo conectar para profundizar en este momento.</span>"; }
+        } catch (error) { 
+            console.error("Error detectado:", error);
+            seccionProfundizacion.innerHTML = `<span style='color: #ff6b6b;'>No se pudo conectar para profundizar: ${error.message}</span>`; 
+        }
     });
 
     contenedor.appendChild(btn);
