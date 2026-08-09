@@ -244,7 +244,7 @@ button.btn-principal, button.btn-secundario {
     color: #f3d06c;
     border: 1px solid #48237c;
     margin-top: 15px;
-    flex: 1; /* Permite que los botones compartan el ancho uniformemente */
+    flex: 1;
 }
 .btn-secundario:hover { 
     box-shadow: 0 0 15px rgba(243, 208, 108, 0.3); 
@@ -418,6 +418,110 @@ button.btn-principal, button.btn-secundario {
 .control-audio { position: fixed; bottom: 15px; right: 15px; background-color: rgba(15, 8, 25, 0.9); border: 1px solid #c59b27; color: #f3d06c; padding: 8px 15px; border-radius: 30px; font-family: 'Playfair Display', serif; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.8); z-index: 1000; transition: all 0.3s; }
 
 @keyframes aparecerCarta { to { opacity: 1; transform: translateY(0); } }
+
+
+/* --- TEMA VIKINGO (RUNAS) --- */
+/* Esta sección sobrescribe dinámicamente los estilos dorados/violetas cuando el cuerpo tiene la clase .bg-runas */
+
+/* Hacemos el contenedor casi transparente para que se vea la imagen vikinga */
+body.bg-runas .contenedor-principal.modo-reino {
+    background-color: rgba(10, 15, 25, 0.45); 
+    border-color: rgba(168, 194, 223, 0.4);
+    box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(168, 194, 223, 0.15);
+}
+
+/* Textos fríos (celestes/platas) */
+body.bg-runas h1, body.bg-runas h2, body.bg-runas h3, body.bg-runas h4, body.bg-runas strong {
+    color: #a8c2df !important;
+    text-shadow: 0 0 15px rgba(168, 194, 223, 0.3) !important;
+}
+body.bg-runas p, body.bg-runas small, body.bg-runas .subtitulo, body.bg-runas em {
+    color: #d0dce8 !important;
+}
+
+/* Botones solapas y secundarios (oscuros/azulados) */
+body.bg-runas .btn-solapa, body.bg-runas .btn-secundario {
+    background: rgba(20, 30, 45, 0.6) !important;
+    border-color: rgba(168, 194, 223, 0.3) !important;
+    color: #a8c2df !important;
+}
+body.bg-runas .btn-solapa:hover, body.bg-runas .btn-secundario:hover {
+    background: rgba(35, 55, 75, 0.8) !important;
+    border-color: #a8c2df !important;
+    box-shadow: 0 5px 15px rgba(168, 194, 223, 0.3) !important;
+    color: #ffffff !important;
+}
+
+/* Botones principales y profundizar */
+body.bg-runas .btn-principal, body.bg-runas .btn-profundizar {
+    background: linear-gradient(135deg, #3a536b 0%, #1c2833 100%) !important;
+    color: #ffffff !important;
+    border-color: #a8c2df !important;
+}
+body.bg-runas .btn-principal:hover, body.bg-runas .btn-profundizar:hover:not(:disabled) {
+    box-shadow: 0 0 20px rgba(168, 194, 223, 0.5) !important;
+}
+
+/* Textarea */
+body.bg-runas textarea {
+    background-color: rgba(10, 15, 25, 0.5) !important;
+    border-color: #4b6b8a !important;
+    color: #ecf0f1 !important;
+}
+body.bg-runas textarea:focus {
+    border-color: #a8c2df !important;
+    box-shadow: 0 0 10px rgba(168, 194, 223, 0.3) !important;
+}
+
+/* Carrusel y Tarjetas */
+body.bg-runas .tarjeta-carrusel {
+    background: linear-gradient(135deg, rgba(25, 35, 45, 0.85) 0%, rgba(10, 15, 20, 0.85) 100%) !important;
+    border-color: #4b6b8a !important;
+}
+body.bg-runas .tarjeta-carrusel:hover {
+    border-color: #a8c2df !important;
+    box-shadow: 0 10px 25px rgba(168, 194, 223, 0.3) !important;
+}
+body.bg-runas .carrusel-tiradas::-webkit-scrollbar-thumb {
+    background: #4b6b8a !important;
+}
+body.bg-runas .btn-flecha-carrusel {
+    background: rgba(20, 30, 45, 0.9) !important;
+    border-color: #4b6b8a !important;
+    color: #a8c2df !important;
+}
+body.bg-runas .btn-flecha-carrusel:hover {
+    background: #4b6b8a !important;
+    color: #ffffff !important;
+}
+
+/* Fichas de Runas y Resultados */
+body.bg-runas .runa-ficha {
+    background: linear-gradient(145deg, rgba(35, 50, 65, 0.7), rgba(15, 20, 30, 0.8)) !important;
+    border-color: #637a91 !important;
+    color: #a8c2df !important;
+}
+body.bg-runas #resultado {
+    background-color: rgba(10, 15, 25, 0.5) !important;
+    border-left-color: #a8c2df !important;
+}
+body.bg-runas .mesa-seleccion-cartas {
+    background: rgba(10, 15, 25, 0.4) !important;
+    border-color: rgba(168, 194, 223, 0.4) !important;
+}
+body.bg-runas .control-audio {
+    background-color: rgba(20, 30, 45, 0.9) !important;
+    border-color: #a8c2df !important;
+    color: #a8c2df !important;
+}
+body.bg-runas .carta-flotante-central {
+    border-color: #a8c2df !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.8), 0 0 25px rgba(168, 194, 223, 0.3) !important;
+}
+body.bg-runas .resplandor-base {
+    background: radial-gradient(ellipse at center, rgba(168, 194, 223, 0.3) 0%, rgba(0,0,0,0) 70%) !important;
+}
+
 
 /* --- REGLAS RESPONSIVE --- */
 @media (max-width: 600px) {
