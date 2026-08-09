@@ -425,3 +425,69 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     .mesa-cruz-celta .posicion-carta { width: 55px; height: 95px; }
     .btn-flecha-carrusel { width: 30px; height: 30px; font-size: 1.1em; }
 }
+/* --- MESAS GEOMÉTRICAS PARA TIRADAS DE RUNAS --- */
+.mesa-runas-lineal {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+/* Cruz Rúnica (4 runas): 1 izq, 2 der, 3 arriba, 4 abajo */
+.mesa-cruz-runica {
+    display: grid;
+    grid-template-areas: 
+        ". arbol ."
+        "izq centro der"
+        ". abajo .";
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+}
+
+/* Tirada de 5 Runas en columna vertical ascendente */
+.mesa-tirada-5-runas {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+/* Cruz Celta Rúnica (6 runas) y Martillo de Thor */
+.mesa-cruz-celta-runas {
+    display: grid;
+    grid-template-columns: repeat(3, 110px);
+    grid-template-rows: repeat(3, auto);
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+}
+
+/* Tirada de 7 Runas (Mimir): 3 pares arriba y 1 consejo abajo */
+.mesa-tirada-7-runas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
+}
+.mesa-tirada-7-pares {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Yggdrasil (9 runas) */
+.mesa-yggdrasil {
+    display: grid;
+    grid-template-columns: repeat(3, 110px);
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+}

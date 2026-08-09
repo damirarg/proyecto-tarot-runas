@@ -364,6 +364,14 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
     ultimaPregunta = pregunta;
     ultimasCartas = runasSeleccionadas.map(r => r.nombre);
 
+    let claseMesaRunas = "mesa-runas-lineal";
+    if (idTirada === "nornas") claseMesaRunas = "mesa-runas-lineal";
+    else if (idTirada === "cruz_runica") claseMesaRunas = "mesa-cruz-runica";
+    else if (idTirada === "tirada_5") claseMesaRunas = "mesa-tirada-5-runas";
+    else if (idTirada === "cruz_celta" || idTirada === "martillo_thor") claseMesaRunas = "mesa-cruz-celta-runas";
+    else if (idTirada === "tirada_7") claseMesaRunas = "mesa-tirada-7-runas";
+    else if (idTirada === "yggdrasil") claseMesaRunas = "mesa-yggdrasil";
+
     try {
         const respuesta = await fetch('/api/consultar-runas', {
             method: 'POST',
@@ -386,13 +394,8 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         tituloPregunta.textContent = `Tu Consulta Rúnica: ${pregunta}`;
         divResultado.appendChild(tituloPregunta);
 
-        // Mostrar fichas visuales de las runas con las imágenes de madera reales
         const contenedorRunas = document.createElement('div');
-        contenedorRunas.style.display = "flex";
-        contenedorRunas.style.justifyContent = "center";
-        contenedorRunas.style.gap = "18px";
-        contenedorRunas.style.margin = "20px 0";
-        contenedorRunas.style.flexWrap = "wrap";
+        contenedorRunas.className = claseMesaRunas;
 
         runasSeleccionadas.forEach((runa, index) => {
             const ficha = document.createElement('div');
@@ -418,7 +421,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             nombreRuna.style.display = "block";
             nombreRuna.style.fontFamily = "'Playfair Display', serif";
             nombreRuna.style.fontSize = "0.95em";
-            nombreRuna.textContent = runa.nombre;
+            nombreRuna.textContent = `${index + 1}. ${runa.nombre}`;
 
             ficha.appendChild(imgRuna);
             ficha.appendChild(nombreRuna);
