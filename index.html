@@ -21,7 +21,7 @@
 
     <div id="contenedor-principal" class="contenedor-principal">
         
-        <!-- PANTALLA 1: LANDING PAGE MÍSTICA (ESTILO TAROTOO) -->
+        <!-- PANTALLA 1: LANDING PAGE MÍSTICA -->
         <div id="pantalla-portales" style="display: flex; flex-direction: column; justify-content: space-between; align-items: center; width: 100%; min-height: 80vh;">
             
             <!-- Orbes decorativos de fondo -->
@@ -30,23 +30,32 @@
 
             <div style="text-align: center; margin-bottom: 20px; z-index: 2;">
                 <h1 style="font-size: 3.5em; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 0;">Oráculos</h1>
-                <p style="color: #bfaee3; font-size: 1.4em; margin-top: 10px; font-style: italic;">Haga su elección</p>
+                <p style="color: #bfaee3; font-size: 1.4em; margin-top: 10px; font-style: italic;">Atraviesa el umbral hacia tu destino</p>
             </div>
 
-            <div class="contenedor-cartas-portal" style="z-index: 2;">
-                <div class="carta-portal" id="btnPortalTarot">
-                    <div class="interior-carta">
-                        <div class="icono-portal">✨</div>
-                        <h2>Tarot<br>Profundo</h2>
+            <!-- ESTRUCTURA NUEVA: PUERTAS ANTIGUAS -->
+            <div class="contenedor-puertas-portal" style="z-index: 2;">
+                
+                <!-- Puerta Tarot -->
+                <div class="puerta-interactiva" id="btnPortalTarot">
+                    <h2 class="titulo-puerta">Oráculo<br>del Tarot</h2>
+                    <div class="marco-puerta">
+                        <div class="interior-puerta">✨</div>
+                        <div class="hoja-puerta hoja-izq"></div>
+                        <div class="hoja-puerta hoja-der"></div>
                     </div>
                 </div>
 
-                <div class="carta-portal" id="btnPortalRunas">
-                    <div class="interior-carta">
-                        <div class="icono-portal">ᛟ</div>
-                        <h2>Sabiduría<br>Nórdica</h2>
+                <!-- Puerta Runas -->
+                <div class="puerta-interactiva" id="btnPortalRunas">
+                    <h2 class="titulo-puerta">Sabiduría<br>Nórdica</h2>
+                    <div class="marco-puerta">
+                        <div class="interior-puerta">ᛟ</div>
+                        <div class="hoja-puerta hoja-izq"></div>
+                        <div class="hoja-puerta hoja-der"></div>
                     </div>
                 </div>
+
             </div>
 
             <!-- Footer Legal y Enlaces -->

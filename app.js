@@ -85,7 +85,7 @@ function detenerNieve() {
     }
 }
 
-// --- NAVEGACIÓN Y PORTALES ---
+// --- NAVEGACIÓN Y PORTALES CON ANIMACIÓN 3D ---
 const pantallaPortales = document.getElementById('pantalla-portales');
 const pantallaBienvenida = document.getElementById('pantalla-bienvenida');
 const pantallaTiradas = document.getElementById('pantalla-tiradas');
@@ -93,58 +93,70 @@ const pantallaRecomendacion = document.getElementById('pantalla-recomendacion');
 const pantallaLectura = document.getElementById('pantalla-lectura');
 const contenedorPrincipal = document.getElementById('contenedor-principal');
 
-// Portales Principales (Estilo Tarotoo)
-document.getElementById('btnPortalTarot')?.addEventListener('click', () => {
-    modoActual = "tarot";
-    document.body.className = 'bg-tarot'; 
-    if (contenedorPrincipal) contenedorPrincipal.classList.add('modo-reino');
-    detenerNieve();
-    manejarAudioPorReino();
+document.getElementById('btnPortalTarot')?.addEventListener('click', function() {
+    // 1. Iniciamos la animación de la puerta
+    this.classList.add('abierta');
     
-    // Asignamos la puerta al botón de salir del Tarot
-    document.querySelectorAll('.btn-salir-reino').forEach(btn => {
-        btn.textContent = "🚪 Salir del Reino";
-    });
-    
-    if (pantallaPortales) pantallaPortales.style.display = "none";
-    if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
-    
-    const titulo = document.getElementById('tituloSeccionTirada');
-    if (titulo) titulo.textContent = "Oráculo del Tarot";
-    
-    const cartaDecorativa = document.getElementById('cartaDecorativa');
-    if (cartaDecorativa) cartaDecorativa.src = "imagenes/00_TheFool.jpg"; 
-    
-    const textoRitualDia = document.getElementById('textoRitualDia');
-    if (textoRitualDia) textoRitualDia.textContent = "Carta del Día";
+    // 2. Esperamos 1 segundo para que la puerta se abra por completo antes de entrar
+    setTimeout(() => {
+        modoActual = "tarot";
+        document.body.className = 'bg-tarot'; 
+        if (contenedorPrincipal) contenedorPrincipal.classList.add('modo-reino');
+        detenerNieve();
+        manejarAudioPorReino();
+        
+        document.querySelectorAll('.btn-salir-reino').forEach(btn => {
+            btn.textContent = "🚪 Salir del Reino";
+        });
+        
+        if (pantallaPortales) pantallaPortales.style.display = "none";
+        if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
+        
+        const titulo = document.getElementById('tituloSeccionTirada');
+        if (titulo) titulo.textContent = "Oráculo del Tarot";
+        
+        const cartaDecorativa = document.getElementById('cartaDecorativa');
+        if (cartaDecorativa) cartaDecorativa.src = "imagenes/00_TheFool.jpg"; 
+        
+        const textoRitualDia = document.getElementById('textoRitualDia');
+        if (textoRitualDia) textoRitualDia.textContent = "Carta del Día";
+
+        // 3. Reseteamos la puerta a "cerrada" por si el usuario vuelve a la pantalla inicial
+        this.classList.remove('abierta');
+    }, 1000); 
 });
 
-document.getElementById('btnPortalRunas')?.addEventListener('click', () => {
-    modoActual = "runas";
-    document.body.className = 'bg-runas'; 
-    if (contenedorPrincipal) contenedorPrincipal.classList.add('modo-reino');
-    iniciarNieve();
-    manejarAudioPorReino();
+document.getElementById('btnPortalRunas')?.addEventListener('click', function() {
+    this.classList.add('abierta');
     
-    // Asignamos el casco nórdico al botón de salir de las Runas
-    document.querySelectorAll('.btn-salir-reino').forEach(btn => {
-        btn.textContent = "🪖 Salir del Reino";
-    });
-    
-    if (pantallaPortales) pantallaPortales.style.display = "none";
-    if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
-    
-    const titulo = document.getElementById('tituloSeccionTirada');
-    if (titulo) titulo.textContent = "Sabiduría de las Runas";
+    setTimeout(() => {
+        modoActual = "runas";
+        document.body.className = 'bg-runas'; 
+        if (contenedorPrincipal) contenedorPrincipal.classList.add('modo-reino');
+        iniciarNieve();
+        manejarAudioPorReino();
+        
+        document.querySelectorAll('.btn-salir-reino').forEach(btn => {
+            btn.textContent = "🪖 Salir del Reino";
+        });
+        
+        if (pantallaPortales) pantallaPortales.style.display = "none";
+        if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
+        
+        const titulo = document.getElementById('tituloSeccionTirada');
+        if (titulo) titulo.textContent = "Sabiduría de las Runas";
 
-    const cartaDecorativa = document.getElementById('cartaDecorativa');
-    if (cartaDecorativa) cartaDecorativa.src = "runas_imagenes/fehu.png"; 
+        const cartaDecorativa = document.getElementById('cartaDecorativa');
+        if (cartaDecorativa) cartaDecorativa.src = "runas_imagenes/fehu.png"; 
 
-    const textoRitualDia = document.getElementById('textoRitualDia');
-    if (textoRitualDia) textoRitualDia.textContent = "Runa del Día";
+        const textoRitualDia = document.getElementById('textoRitualDia');
+        if (textoRitualDia) textoRitualDia.textContent = "Runa del Día";
+
+        this.classList.remove('abierta');
+    }, 1000);
 });
 
-// Botones "Salir del Reino" (regresan a la Landing Page)
+// Botones "Salir del Reino"
 document.querySelectorAll('.btn-salir-reino').forEach(btn => {
     btn.addEventListener('click', () => {
         document.body.className = 'bg-general'; 
@@ -163,7 +175,7 @@ document.querySelectorAll('.btn-salir-reino').forEach(btn => {
     });
 });
 
-// Botones "Volver al Menú" (regresan al inicio del reino actual)
+// Botones "Volver al Menú"
 document.querySelectorAll('.btn-volver-menu').forEach(btn => {
     btn.addEventListener('click', () => {
         if (pantallaPortales) pantallaPortales.style.display = "none";
