@@ -134,14 +134,8 @@ document.getElementById('btnPortalRunas')?.addEventListener('click', () => {
     if (textoRitualDia) textoRitualDia.textContent = "Runa del Día";
 });
 
-// Botones de sub-menú (Solapas)
-document.getElementById('btnIrTiradas')?.addEventListener('click', () => {
-    if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
-    if (pantallaTiradas) pantallaTiradas.style.display = "flex";
-});
-
-// Botones "Volver al Inicio" (Gran Salón)
-document.querySelectorAll('.btn-volver-inicio').forEach(btn => {
+// Botones "Salir del Reino" (regresan al Gran Salón de Portales)
+document.querySelectorAll('.btn-salir-reino').forEach(btn => {
     btn.addEventListener('click', () => {
         document.body.className = 'bg-general'; 
         if (contenedorPrincipal) contenedorPrincipal.classList.remove('modo-reino');
@@ -159,7 +153,27 @@ document.querySelectorAll('.btn-volver-inicio').forEach(btn => {
     });
 });
 
-// Botón Hacer Otra Consulta dentro del mismo reino
+// Botones "Volver al Menú" (regresan al inicio del reino actual)
+document.querySelectorAll('.btn-volver-menu').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (pantallaPortales) pantallaPortales.style.display = "none";
+        if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
+        if (pantallaTiradas) pantallaTiradas.style.display = "none";
+        if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
+        if (pantallaLectura) pantallaLectura.style.display = "none";
+        
+        const inputPregunta = document.getElementById('preguntaUsuario');
+        if (inputPregunta) inputPregunta.value = "";
+    });
+});
+
+// Botones de sub-menú (Solapas)
+document.getElementById('btnIrTiradas')?.addEventListener('click', () => {
+    if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
+    if (pantallaTiradas) pantallaTiradas.style.display = "flex";
+});
+
+// Botón Hacer Otra Consulta (te manda a ingresar pregunta dentro del mismo reino)
 const botonesOtraConsulta = document.querySelectorAll('#btnCambiarPregunta, #btnHacerOtraConsulta');
 botonesOtraConsulta.forEach(btn => {
     btn.addEventListener('click', () => {

@@ -19,7 +19,7 @@ body {
 
 /* Fondos Dinámicos de los Reinos */
 body.bg-general { 
-    background: #0a0a0a; /* Fondo liso, minimalista y oscuro para el inicio */
+    background: #0a0a0a; 
 }
 body.bg-tarot { 
     background: radial-gradient(circle at top, #48237c 0%, #150926 80%, #0a0413 100%); 
@@ -29,7 +29,6 @@ body.bg-runas {
     background-size: cover;
 }
 
-/* Contenedor base sin estilo (para la landing page) */
 .contenedor-principal {
     max-width: 900px;
     width: 100%;
@@ -41,7 +40,6 @@ body.bg-runas {
     transition: all 0.5s ease;
 }
 
-/* Clase que se activa mediante JS cuando entrás a un Reino */
 .contenedor-principal.modo-reino {
     background-color: rgba(15, 8, 25, 0.85); 
     border: 1px solid rgba(197, 155, 39, 0.4); 
@@ -226,6 +224,9 @@ button.btn-principal, button.btn-secundario {
     letter-spacing: 2px;
     transition: all 0.3s ease;
     border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .btn-principal {
@@ -243,6 +244,7 @@ button.btn-principal, button.btn-secundario {
     color: #f3d06c;
     border: 1px solid #48237c;
     margin-top: 15px;
+    flex: 1; /* Permite que los botones compartan el ancho uniformemente */
 }
 .btn-secundario:hover { 
     box-shadow: 0 0 15px rgba(243, 208, 108, 0.3); 

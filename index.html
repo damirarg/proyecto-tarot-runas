@@ -12,14 +12,13 @@
     <!-- Efecto de Nieve (Oculto por defecto) -->
     <div id="contenedor-nieve" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;"></div>
 
-    <!-- Pistas de Audio -->
-    <audio id="audioFondo" src="musica_tarot.mp3" loop preload="auto"></audio>
+    <!-- Pistas de Audio (Rutas actualizadas a la carpeta imagenes) -->
+    <audio id="audioFondo" src="imagenes/musica_tarot.mp3" loop preload="auto"></audio>
     <audio id="audioRunas" src="imagenes/musica_vikinga.mp3" loop preload="auto"></audio>
 
-    <!-- Botón de Control de Audio Global (Oculto en el inicio genérico) -->
+    <!-- Botón de Control de Audio Global -->
     <button id="btnAudio" class="control-audio" style="display: none;">🎵 Activar Sonido</button>
 
-    <!-- El contenedor arranca sin estilo de vidrio (se activa al entrar a un reino) -->
     <div id="contenedor-principal" class="contenedor-principal">
         
         <!-- PANTALLA 1: LANDING PAGE MINIMALISTA -->
@@ -49,7 +48,7 @@
             <div class="botonera-solapas">
                 <button id="btnRitualDia" class="btn-solapa">✨ <span id="textoRitualDia">Carta del Día</span></button>
                 <button id="btnIrTiradas" class="btn-solapa">🃏 Realizar Tirada</button>
-                <button class="btn-solapa btn-volver-inicio">🚪 Volver al Inicio</button>
+                <button class="btn-solapa btn-salir-reino">🚪 Salir del Reino</button>
             </div>
         </div>
 
@@ -58,7 +57,11 @@
             <h2 style="color: #f3d06c; font-family: 'Playfair Display', serif; text-align: center;">Ingresa tu Inquietud</h2>
             <textarea id="preguntaUsuario" rows="4" placeholder="Concéntrate en tu pregunta y escríbela aquí..."></textarea>
             <button id="btnMostrarOpciones" class="btn-principal" style="margin-top: 20px;">Ver Disposiciones Disponibles</button>
-            <button class="btn-secundario btn-volver-inicio">Volver al Inicio</button>
+            
+            <div style="display: flex; gap: 15px; margin-top: 15px; width: 100%;">
+                <button class="btn-secundario btn-volver-menu" style="margin-top: 0;">↩ Volver al Menú</button>
+                <button class="btn-secundario btn-salir-reino" style="margin-top: 0;">🚪 Salir del Reino</button>
+            </div>
         </div>
 
         <!-- PANTALLA 4: CARRUSEL DE TIRADAS -->
@@ -71,7 +74,10 @@
                 <button id="btnFlechaDer" class="btn-flecha-carrusel">›</button>
             </div>
             
-            <button id="btnCambiarPregunta" class="btn-secundario" style="margin-top: 20px;">Reformular Pregunta</button>
+            <div style="display: flex; gap: 15px; margin-top: 20px; width: 100%;">
+                <button id="btnCambiarPregunta" class="btn-secundario" style="margin-top: 0;">Reformular Pregunta</button>
+                <button class="btn-secundario btn-volver-menu" style="margin-top: 0;">↩ Volver al Menú</button>
+            </div>
         </div>
 
         <!-- PANTALLA 5: LECTURA Y RESULTADO -->
@@ -80,7 +86,10 @@
             
             <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 30px;">
                 <button id="btnHacerOtraConsulta" class="btn-secundario">Realizar Otra Consulta</button>
-                <button class="btn-secundario btn-volver-inicio" style="margin-top: 0;">🚪 Volver al Inicio</button>
+                <div style="display: flex; gap: 15px; width: 100%;">
+                    <button class="btn-secundario btn-volver-menu" style="margin-top: 0;">↩ Volver al Menú</button>
+                    <button class="btn-secundario btn-salir-reino" style="margin-top: 0;">🚪 Salir del Reino</button>
+                </div>
             </div>
         </div>
 
