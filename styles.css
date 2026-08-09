@@ -380,8 +380,8 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     padding: 10px;
     text-align: center;
     color: #f3d06c;
-    width: 95px;             /* Ancho fijo estricto */
-    height: 145px;           /* Altura fija estricta (reemplazamos min-height) */
+    width: 95px;             
+    height: 145px;           
     box-sizing: border-box;
     box-shadow: 0 8px 20px rgba(0,0,0,0.8);
     display: flex;
@@ -397,12 +397,14 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     margin-bottom: 8px;
 }
 
+/* YGGDRASIL - LA MATRIZ SINTÁCTICA CORREGIDA */
 .mesa-yggdrasil {
     display: grid;
+    grid-template-columns: auto auto auto;
     grid-template-areas:
-        ". runa3 runa4 ."
-        "runa5 runa2 runa6 ."
-        ". runa1 . ."
+        "runa3 . runa4"
+        "runa5 runa2 runa6"
+        ". runa1 ."
         "runa7 . runa9"
         ". runa8 .";
     gap: 15px;
@@ -425,12 +427,13 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 }
 .mesa-cruz-runica .runa-ficha { justify-self: center; }
 
+/* CRUZ CELTA RUNAS (Corregida) */
 .mesa-cruz-celta-runas {
     display: grid;
     grid-template-areas:
         ". runa6 ."
-        "runa1 runa5 runa3"
-        ". runa2 ."
+        ". runa5 ."
+        "runa1 runa2 runa3"
         ". runa4 .";
     gap: 15px;
     justify-content: center;
@@ -455,7 +458,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
         ". . . runa7 runa7 . . .";
     gap: 15px 8px;
     justify-content: center;
-    align-items: center;
+    align-items: center; 
     margin: 20px auto;
     width: 100%;
     max-width: 800px;
@@ -463,7 +466,7 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 
 .mesa-tirada-7-runas .runa-ficha {
     width: 85px;         
-    height: 140px;
+    height: 140px;       
     justify-self: center; 
 }
 
@@ -553,4 +556,9 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
         height: 35px;
     }
     .mesa-tirada-7-runas strong { font-size: 0.7em; }
+    
+    .mesa-yggdrasil {
+        max-width: 100%;
+        overflow-x: auto;
+    }
 }
