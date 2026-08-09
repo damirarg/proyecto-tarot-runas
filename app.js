@@ -446,8 +446,8 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             ficha.style.boxShadow = "0 8px 20px rgba(0,0,0,0.8)";
             ficha.style.animation = `aparecerCarta 0.6s ease-out ${index * 0.2}s forwards`;
 
-            // === LÓGICA GEOMÉTRICA DE RUNAS ===
-            if (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil") {
+            // === LÓGICA GEOMÉTRICA DE RUNAS AGREGADA ===
+            if (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") {
                 ficha.style.gridArea = `runa${index + 1}`;
             }
 

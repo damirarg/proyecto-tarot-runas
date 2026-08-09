@@ -293,16 +293,14 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     object-fit: cover; background-color: #1a122a;
 }
 
-/* --- DISPOSICIONES GEOMÉTRICAS DE MESAS (ESPECIALES) --- */
+/* --- DISPOSICIONES GEOMÉTRICAS DE MESAS (ESPECIALES DE TAROT) --- */
 
-/* PASADO, PRESENTE Y FUTURO (HORIZONTAL) */
 .mesa-pasado-presente-futuro {
     display: flex; flex-direction: row; justify-content: center;
     align-items: center; gap: 18px;
 }
 .mesa-pasado-presente-futuro .posicion-carta { width: 115px; height: 195px; }
 
-/* EL ESPEJO DEL AMOR (2x2) */
 .mesa-espejo { display: grid; grid-template-columns: repeat(2, auto); gap: 10px; justify-content: center; justify-items: center; }
 .mesa-espejo .posicion-carta { width: 105px; height: 180px; }
 .mesa-espejo .pos-1 { grid-area: 1 / 1 / 2 / 2; }
@@ -310,7 +308,6 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 .mesa-espejo .pos-3 { grid-area: 2 / 1 / 3 / 3; }
 .mesa-espejo .pos-4 { grid-area: 3 / 1 / 4 / 3; }
 
-/* ENCRUCIJADA / DOS CAMINOS (5 CARTAS EN CRUZ/T) */
 .mesa-encrucijada { display: grid; grid-template-columns: repeat(3, auto); grid-template-rows: repeat(3, auto); gap: 10px; justify-content: center; justify-items: center; align-items: center; }
 .mesa-encrucijada .posicion-carta { width: 95px; height: 160px; }
 .mesa-encrucijada .pos-1 { grid-area: 3 / 2 / 4 / 3; }
@@ -319,7 +316,6 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 .mesa-encrucijada .pos-4 { grid-area: 2 / 3 / 3 / 4; }
 .mesa-encrucijada .pos-5 { grid-area: 1 / 3 / 2 / 4; }
 
-/* BRÚJULA LABORAL */
 .mesa-brujula { display: grid; grid-template-columns: repeat(3, auto); grid-template-rows: repeat(3, auto); gap: 10px; justify-content: center; justify-items: center; align-items: center; }
 .mesa-brujula .posicion-carta { width: 100px; height: 170px; }
 .mesa-brujula .pos-3 { grid-area: 1 / 2 / 2 / 3; }
@@ -327,14 +323,12 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 .mesa-brujula .pos-1 { grid-area: 2 / 2 / 3 / 3; }
 .mesa-brujula .pos-4 { grid-area: 2 / 3 / 3 / 4; }
 
-/* TIRADA DEL APRENDIZAJE */
 .mesa-aprendizaje { display: grid; grid-template-columns: repeat(2, auto); gap: 10px; justify-content: center; justify-items: center; }
 .mesa-aprendizaje .posicion-carta { width: 105px; height: 180px; }
 .mesa-aprendizaje .pos-3 { grid-area: 1 / 1 / 2 / 3; }
 .mesa-aprendizaje .pos-1 { grid-area: 2 / 1 / 3 / 2; }
 .mesa-aprendizaje .pos-2 { grid-area: 2 / 2 / 3 / 3; }
 
-/* LA HERRADURA (7 CARTAS EN ARCO/HERRADURA) */
 .mesa-herradura { flex-wrap: nowrap; padding-bottom: 30px; margin-top: 20px; gap: 0; }
 .mesa-herradura .posicion-carta { width: 85px; height: 145px; margin: 0 -4px; }
 .mesa-herradura .pos-1 { transform: translateY(40px) rotate(-15deg); }
@@ -345,7 +339,6 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 .mesa-herradura .pos-6 { transform: translateY(20px) rotate(8deg); }
 .mesa-herradura .pos-7 { transform: translateY(40px) rotate(15deg); }
 
-/* CRUZ CELTA (10 CARTAS) */
 .mesa-cruz-celta { display: grid; grid-template-columns: repeat(4, auto); grid-template-rows: repeat(4, auto); gap: 8px; align-items: center; justify-items: center; max-width: 700px; margin: 15px auto; }
 .mesa-cruz-celta .posicion-carta { width: 85px; height: 145px; }
 .mesa-cruz-celta .pos-1 { grid-area: 2 / 2 / 3 / 3; z-index: 1; }
@@ -359,7 +352,6 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 .mesa-cruz-celta .pos-9 { grid-area: 2 / 4 / 3 / 5; }
 .mesa-cruz-celta .pos-10 { grid-area: 1 / 4 / 2 / 5; }
 
-/* MAPAMUNDI / GIRO SOLAR (12 CARTAS EN CÍRCULO) */
 .mesa-mapamundi { display: grid; grid-template-columns: repeat(5, auto); grid-template-rows: repeat(5, auto); gap: 10px; justify-content: center; justify-items: center; align-items: center; max-width: 700px; margin: 10px auto; }
 .mesa-mapamundi .posicion-carta { width: 75px; height: 130px; }
 .mesa-mapamundi .pos-1  { grid-area: 3 / 1 / 4 / 2; }
@@ -374,6 +366,82 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 .mesa-mapamundi .pos-10 { grid-area: 1 / 3 / 2 / 4; }
 .mesa-mapamundi .pos-11 { grid-area: 1 / 2 / 2 / 3; }
 .mesa-mapamundi .pos-12 { grid-area: 2 / 1 / 3 / 2; }
+
+/* --- DISPOSICIONES GEOMÉTRICAS DE MESAS (ESPECIALES DE RUNAS) --- */
+.mesa-runas-lineal {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.mesa-yggdrasil {
+    display: grid;
+    grid-template-areas:
+        ". runa3 runa4 ."
+        "runa5 runa2 runa6 ."
+        ". runa1 . ."
+        "runa7 . runa9"
+        ". runa8 .";
+    gap: 15px;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+.mesa-cruz-runica {
+    display: grid;
+    grid-template-areas:
+        ". runa3 ."
+        "runa1 . runa2"
+        ". runa4 .";
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+}
+
+.mesa-cruz-celta-runas {
+    display: grid;
+    grid-template-areas:
+        ". runa6 ."
+        "runa1 runa5 runa3"
+        ". runa2 ."
+        ". runa4 .";
+    gap: 15px;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+.mesa-tirada-5-runas {
+    display: flex; 
+    flex-direction: column-reverse; 
+    align-items: center; 
+    gap: 10px;
+}
+
+/* NUEVA MESA: TIRADA 7 RUNAS (MIMIR) */
+.mesa-tirada-7-runas {
+    display: grid;
+    /* Usamos 8 columnas para poder separar los tres pares de la fila superior y centrar la runa 7 abajo */
+    grid-template-areas:
+        "runa1 runa2 . runa3 runa4 . runa5 runa6"
+        ". . . runa7 runa7 . . .";
+    gap: 15px;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+.runa-ficha {
+    background: #1a122a;
+    border: 2px solid #c59b27;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    color: #f3d06c;
+    width: 100px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+}
 
 #resultado {
     margin-top: 15px; padding: 20px;
@@ -424,70 +492,5 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     .mesa-herradura .posicion-carta { width: 45px; height: 80px; }
     .mesa-cruz-celta .posicion-carta { width: 55px; height: 95px; }
     .btn-flecha-carrusel { width: 30px; height: 30px; font-size: 1.1em; }
-}
-/* --- MESAS GEOMÉTRICAS PARA TIRADAS DE RUNAS --- */
-.mesa-runas-lineal {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin: 20px 0;
-    flex-wrap: wrap;
-}
-
-/* Cruz Rúnica (4 runas): 1 izq, 2 der, 3 arriba, 4 abajo */
-.mesa-cruz-runica {
-    display: grid;
-    grid-template-areas: 
-        ". runa3 ."
-        "runa1 . runa2"
-        ". runa4 .";
-    gap: 20px;
-    justify-content: center;
-    align-items: center;
-    margin: 30px auto;
-}
-
-/* Tirada de 5 Runas en columna vertical ascendente */
-.mesa-tirada-5-runas {
-    display: flex;
-    flex-direction: column-reverse;
-    align-items: center;
-    gap: 10px;
-    margin: 20px 0;
-}
-
-/* Cruz Celta Rúnica (6 runas) y Martillo de Thor */
-.mesa-cruz-celta-runas {
-    display: grid;
-    grid-template-columns: repeat(3, 110px);
-    grid-template-rows: repeat(3, auto);
-    gap: 12px;
-    justify-content: center;
-    align-items: center;
-    margin: 20px auto;
-}
-
-/* Tirada de 7 Runas (Mimir): 3 pares arriba y 1 consejo abajo */
-.mesa-tirada-7-runas {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    margin: 20px 0;
-}
-.mesa-tirada-7-pares {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-/* Yggdrasil (9 runas) */
-.mesa-yggdrasil {
-    display: grid;
-    grid-template-columns: repeat(3, 110px);
-    gap: 10px;
-    justify-content: center;
-    align-items: center;
-    margin: 20px auto;
+    .mesa-tirada-7-runas { gap: 5px; }
 }
