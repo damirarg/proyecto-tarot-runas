@@ -436,7 +436,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
 
         runasSeleccionadas.forEach((runa, index) => {
             const ficha = document.createElement('div');
-            ficha.className = 'runa-ficha';
+            ficha.className = "runa-ficha";
             ficha.style.animation = `aparecerCarta 0.6s ease-out ${index * 0.2}s forwards`;
 
             // === LÓGICA GEOMÉTRICA DE RUNAS ===
@@ -447,7 +447,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             const imgRuna = document.createElement('img');
             imgRuna.src = `runas_imagenes/${runa.id}.png`;
             imgRuna.alt = runa.nombre;
-            imgRuna.className = 'img-runa';
+            imgRuna.className = "img-runa";
 
             const nombreRuna = document.createElement('strong');
             nombreRuna.style.display = "block";
