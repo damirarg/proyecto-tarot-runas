@@ -1,520 +1,541 @@
-import { mazo, imagenesRiderWaite, catalogoTiradas, mezclarMazo } from './tarot-data.js';
-import { mazoRunas, catalogoTiradasRunas, mezclarRunas } from './runas-data.js';
-
-let ultimaPregunta = "";
-let ultimasCartas = [];
-let modoActual = "tarot"; // "tarot" o "runas"
-
-// --- FUNCIÓN PARA CONVERTIR MARKDOWN EN HTML DORADO ---
-function formatearTextoMarkdown(texto) {
-    if (!texto) return "";
-    return texto
-        .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #f3d06c; font-family: \'Playfair Display\', serif; font-size: 1.1em;">$1</strong>')
-        .replace(/###\s*(.*?)\n/g, '<h4 style="color: #f3d06c; font-family: \'Playfair Display\', serif; margin-top: 15px; margin-bottom: 5px;">$1</h4>')
-        .replace(/\n/g, '<br>');
+/* --- ESTILOS GENERALES Y BASE --- */
+body {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    background-image: url('image_923029.jpg');
+    background-size: cover; 
+    background-position: center 40%; 
+    background-repeat: no-repeat; 
+    background-attachment: fixed; 
+    color: #f2ebd9;
+    margin: 0;
+    padding: 15px 20px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
 }
 
-// --- CONTROL DE AUDIO SEGURO ---
-const audio = document.getElementById('audioFondo');
-const btnAudio = document.getElementById('btnAudio');
-
-if (btnAudio) {
-    btnAudio.addEventListener('click', () => {
-        if (audio.paused) {
-            audio.play().then(() => {
-                btnAudio.textContent = "🔇 Silenciar Sonido";
-            }).catch(() => {
-                alert("El navegador requiere interacción previa para reproducir sonido.");
-            });
-        } else {
-            audio.pause();
-            btnAudio.textContent = "🎵 Activar Sonido";
-        }
-    });
+.contenedor-principal {
+    background-color: rgba(18, 12, 28, 0.92); 
+    border: 1px solid #c59b27;
+    border-radius: 12px;
+    padding: 30px 40px;
+    max-width: 850px;
+    width: 100%;
+    max-height: 94vh;
+    box-sizing: border-box;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.85); 
+    backdrop-filter: blur(10px); 
+    position: relative; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
-// --- NAVEGACIÓN ENTRE PANTALLAS ---
-const pantallaBienvenida = document.getElementById('pantalla-bienvenida');
-const pantallaTiradas = document.getElementById('pantalla-tiradas');
-const pantallaRecomendacion = document.getElementById('pantalla-recomendacion');
-const pantallaLectura = document.getElementById('pantalla-lectura');
-
-// Botón: Ir a Tiradas de Tarot
-document.getElementById('btnIrTiradasTarot').addEventListener('click', () => {
-    modoActual = "tarot";
-    document.getElementById('tituloSeccionTirada').textContent = "Consulta de Tarot";
-    pantallaBienvenida.style.display = "none";
-    pantallaTiradas.style.display = "flex";
-    pantallaRecomendacion.style.display = "none";
-    pantallaLectura.style.display = "none";
-});
-
-// Botón: Ir a Runas Vikingas
-document.getElementById('btnIrRunas').addEventListener('click', () => {
-    modoActual = "runas";
-    document.getElementById('tituloSeccionTirada').textContent = "Consulta de Runas Vikingas";
-    pantallaBienvenida.style.display = "none";
-    pantallaTiradas.style.display = "flex";
-    pantallaRecomendacion.style.display = "none";
-    pantallaLectura.style.display = "none";
-});
-
-document.querySelectorAll('.btn-volver-inicio').forEach(btn => {
-    btn.addEventListener('click', () => {
-        pantallaBienvenida.style.display = "flex";
-        pantallaTiradas.style.display = "none";
-        pantallaRecomendacion.style.display = "none";
-        pantallaLectura.style.display = "none";
-        const inputPregunta = document.getElementById('preguntaUsuario');
-        if (inputPregunta) inputPregunta.value = "";
-    });
-});
-
-// --- SOLUCIÓN AL BOTÓN DE CAMBIAR PREGUNTA / OTRA CONSULTA ---
-const botonesOtraConsulta = document.querySelectorAll('#btnCambiarPregunta, #btnHacerOtraConsulta, .btn-otra-consulta');
-
-botonesOtraConsulta.forEach(btn => {
-    btn.addEventListener('click', () => {
-        pantallaBienvenida.style.display = "none";
-        pantallaTiradas.style.display = "flex";
-        pantallaRecomendacion.style.display = "none";
-        pantallaLectura.style.display = "none";
-        
-        const inputPregunta = document.getElementById('preguntaUsuario');
-        if (inputPregunta) inputPregunta.value = "";
-
-        // Mantenemos el título correcto según de dónde venimos
-        if (modoActual === "tarot") {
-            document.getElementById('tituloSeccionTirada').textContent = "Consulta de Tarot";
-        } else {
-            document.getElementById('tituloSeccionTirada').textContent = "Consulta de Runas Vikingas";
-        }
-    });
-});
-
-// --- GENERACIÓN DEL CARRUSEL ---
-document.getElementById('btnMostrarOpciones').addEventListener('click', () => {
-    const pregunta = document.getElementById('preguntaUsuario');
-    if (pregunta && !pregunta.value.trim()) {
-        alert("Por favor, escribí tu consulta antes de continuar.");
-        return;
-    }
-
-    pantallaTiradas.style.display = "none";
-    pantallaRecomendacion.style.display = "flex";
-
-    const carrusel = document.getElementById('carruselTiradas');
-    carrusel.innerHTML = ""; 
-
-    const catalogoActivo = (modoActual === "tarot") ? catalogoTiradas : catalogoTiradasRunas;
-
-    catalogoActivo.forEach(info => {
-        const tarjeta = document.createElement('button');
-        tarjeta.className = 'tarjeta-carrusel';
-        
-        const titulo = document.createElement('strong');
-        titulo.textContent = (modoActual === "tarot") ? `🔮 ${info.nombre}` : `ᛟ ${info.nombre}`;
-        
-        const desc = document.createElement('small');
-        desc.textContent = info.desc;
-
-        tarjeta.appendChild(titulo);
-        tarjeta.appendChild(desc);
-
-        tarjeta.addEventListener('click', () => ejecutarTiradaElegida(info.id));
-        carrusel.appendChild(tarjeta);
-    });
-});
-
-document.getElementById('btnFlechaIzq').addEventListener('click', () => {
-    document.getElementById('carruselTiradas').scrollBy({ left: -260, behavior: 'smooth' });
-});
-document.getElementById('btnFlechaDer').addEventListener('click', () => {
-    document.getElementById('carruselTiradas').scrollBy({ left: 260, behavior: 'smooth' });
-});
-
-function ejecutarTiradaElegida(idTirada) {
-    if (modoActual === "tarot") {
-        let cantidad = 3;
-        if (idTirada === "1") cantidad = 1;
-        else if (idTirada.startsWith("4")) cantidad = 4;
-        else if (idTirada.startsWith("5")) cantidad = 5;
-        else if (idTirada === "7") cantidad = 7;
-        else if (idTirada === "10") cantidad = 10;
-        else if (idTirada === "12") cantidad = 12;
-
-        realizarConsultaTarot(cantidad, idTirada);
-    } else {
-        let cantidadRunas = 1;
-        if (idTirada === "runa_odin") cantidadRunas = 1;
-        else if (idTirada === "nornas") cantidadRunas = 3;
-        else if (idTirada === "cruz_runica") cantidadRunas = 4;
-        else if (idTirada === "tirada_5") cantidadRunas = 5;
-        else if (idTirada === "cruz_celta" || idTirada === "martillo_thor") cantidadRunas = 6;
-        else if (idTirada === "tirada_7") cantidadRunas = 7;
-        else if (idTirada === "yggdrasil") cantidadRunas = 9;
-
-        realizarConsultaRunas(cantidadRunas, idTirada);
-    }
+h1 {
+    font-family: 'Playfair Display', serif;
+    color: #f3d06c;
+    text-align: center;
+    font-size: 2.5em;
+    margin-top: 0;
+    margin-bottom: 5px;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
 }
 
-// --- RITUAL INTERACTIVO DE LA CARTA DEL DÍA (TAROT) ---
-document.getElementById('btnRitualDia').addEventListener('click', () => {
-    modoActual = "tarot";
-    pantallaBienvenida.style.display = "none";
-    pantallaTiradas.style.display = "none";
-    pantallaRecomendacion.style.display = "none";
-    pantallaLectura.style.display = "flex";
+p.subtitulo {
+    text-align: center;
+    font-size: 1.15em;
+    color: #d1c4e9;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
 
-    // OCULTAMOS EL BOTÓN DE OTRA CONSULTA SOLO PARA ESTE RITUAL
-    const btnOtraConsulta = document.getElementById('btnHacerOtraConsulta');
-    if (btnOtraConsulta) {
-        btnOtraConsulta.style.display = "none";
-    }
+textarea {
+    width: 100%;
+    margin-top: 8px;
+    padding: 15px;
+    font-size: 1.15em;
+    font-family: 'Cormorant Garamond', serif;
+    box-sizing: border-box;
+    background-color: rgba(10, 6, 20, 0.7);
+    border: 1px solid #7b5ea7;
+    color: #f2ebd9;
+    border-radius: 8px;
+    outline: none;
+    resize: none;
+}
 
-    const divResultado = document.getElementById('resultado');
-    divResultado.innerHTML = "";
+textarea:focus { border-color: #f3d06c; }
+textarea::placeholder { color: #9a88be; font-style: italic; }
 
-    const tituloRitual = document.createElement('strong');
-    tituloRitual.style.color = "#f3d06c";
-    tituloRitual.style.fontSize = "1.2em";
-    tituloRitual.textContent = "✨ Ritual de la Carta del Día ✨";
+/* --- BOTONES DE INTERFAZ --- */
+button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1em;
+    font-family: 'Playfair Display', serif;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    border: none;
+}
 
-    const descRitual = document.createElement('p');
-    descRitual.style.color = "#d1c4e9";
-    descRitual.style.fontSize = "0.95em";
-    descRitual.style.marginTop = "20px";
-    descRitual.textContent = "El mazo completo de 78 arcanos está extendido en abanico. Desplazate horizontalmente y elegí una carta por intuición:";
+.btn-carta-dia {
+    background: linear-gradient(135deg, #7b5ea7 0%, #422d73 100%);
+    color: #f3d06c;
+    border: 2px solid #c59b27;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(123, 94, 167, 0.5);
+}
 
-    const mesaAbanico = document.createElement('div');
-    mesaAbanico.className = "mesa-seleccion-cartas";
+.btn-carta-dia:hover {
+    background: linear-gradient(135deg, #956ec4 0%, #52378f 100%);
+    box-shadow: 0 0 25px rgba(243, 208, 108, 0.4);
+    transform: translateY(-2px);
+}
 
-    const mazoMezclado = mezclarMazo(mazo);
+.btn-ir-tiradas {
+    background: linear-gradient(135deg, #c59b27 0%, #906c15 100%);
+    color: #120c1c;
+    border: 2px solid #f3d06c;
+    box-shadow: 0 0 20px rgba(197, 155, 39, 0.4);
+}
 
-    mazoMezclado.forEach((cartaSecreta) => {
-        const archivoRider = imagenesRiderWaite[cartaSecreta];
-        
-        const cartaContenedor = document.createElement('div');
-        cartaContenedor.className = 'carta-contenedor';
-        
-        const cartaFlipper = document.createElement('div');
-        cartaFlipper.className = 'carta-flipper';
+.btn-ir-tiradas:hover {
+    box-shadow: 0 0 25px rgba(243, 208, 108, 0.7);
+    transform: translateY(-2px);
+}
 
-        const caraTrasera = document.createElement('div');
-        caraTrasera.className = 'cara-trasera';
+.btn-principal {
+    background: linear-gradient(135deg, #c59b27 0%, #906c15 100%);
+    color: #120c1c;
+    margin-top: 15px;
+}
 
-        const caraFrontal = document.createElement('img');
-        caraFrontal.className = 'cara-frontal';
-        caraFrontal.src = `imagenes/${archivoRider}`;
-        caraFrontal.alt = cartaSecreta;
+.btn-principal:hover {
+    box-shadow: 0 0 15px rgba(243, 208, 108, 0.5);
+    transform: translateY(-1px);
+}
 
-        cartaFlipper.appendChild(caraTrasera);
-        cartaFlipper.appendChild(caraFrontal);
-        cartaContenedor.appendChild(cartaFlipper);
+.btn-secundario {
+    background: linear-gradient(135deg, #422d73 0%, #281a4b 100%);
+    color: #f3d06c;
+    border: 1px solid #7b5ea7;
+    margin-top: 15px;
+}
 
-        cartaContenedor.addEventListener('click', () => {
-            elegirCartaInteractiva(cartaContenedor, cartaSecreta, archivoRider);
-        });
+.btn-secundario:hover { box-shadow: 0 0 15px rgba(243, 208, 108, 0.3); }
 
-        mesaAbanico.appendChild(cartaContenedor);
-    });
+/* --- CARRUSEL INTERACTIVO --- */
+.contenedor-carrusel-padre {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+}
 
-    divResultado.appendChild(tituloRitual);
-    divResultado.appendChild(descRitual);
-    divResultado.appendChild(mesaAbanico);
-});
+.carrusel-tiradas {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding: 15px 5px;
+    width: 100%;
+    cursor: grab;
+}
 
-async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoRider) {
-    if (document.querySelector('.carta-contenedor.seleccionada')) return;
+.carrusel-tiradas:active { cursor: grabbing; }
+
+.carrusel-tiradas::-webkit-scrollbar { height: 8px; }
+.carrusel-tiradas::-webkit-scrollbar-track { background: rgba(10, 6, 20, 0.5); border-radius: 4px; }
+.carrusel-tiradas::-webkit-scrollbar-thumb { background: #c59b27; border-radius: 4px; }
+
+.tarjeta-carrusel {
+    flex: 0 0 240px; 
+    scroll-snap-align: center;
+    background: linear-gradient(135deg, rgba(38, 24, 60, 0.95) 0%, rgba(20, 12, 35, 0.95) 100%);
+    border: 1.5px solid #c59b27;
+    border-radius: 10px;
+    padding: 20px 15px;
+    color: #f3d06c;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    min-height: 130px;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.tarjeta-carrusel:hover {
+    transform: translateY(-5px) scale(1.03);
+    border-color: #f3d06c;
+    box-shadow: 0 0 20px rgba(243, 208, 108, 0.4);
+    background: linear-gradient(135deg, rgba(65, 42, 100, 0.95) 0%, rgba(35, 20, 60, 0.95) 100%);
+}
+
+.tarjeta-carrusel strong {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15em;
+    display: block;
+    margin-bottom: 8px;
+    color: #f3d06c;
+}
+
+.tarjeta-carrusel small {
+    color: #d1c4e9;
+    font-size: 0.9em;
+    line-height: 1.3;
+}
+
+.btn-flecha-carrusel {
+    background: rgba(18, 12, 28, 0.9);
+    border: 1px solid #c59b27;
+    color: #f3d06c;
+    font-size: 1.4em;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.btn-flecha-carrusel:hover {
+    background: #c59b27;
+    color: #120c1c;
+    box-shadow: 0 0 10px rgba(243, 208, 108, 0.6);
+}
+
+/* --- ABANICO DE SELECCIÓN DE CARTA DEL DÍA --- */
+.mesa-seleccion-cartas {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    min-height: 240px;
+    overflow-x: auto;
+    padding: 15px 10px;
+    background: rgba(10, 6, 20, 0.5);
+    border-radius: 8px;
+    border: 1px solid #422d73;
+}
+
+.carta-contenedor {
+    width: 50px;
+    height: 90px;
+    position: relative;
+    perspective: 1000px;
+    cursor: pointer;
+    margin-left: -28px;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), z-index 0.5s ease;
+}
+
+.carta-contenedor:first-child { margin-left: 0; }
+.carta-contenedor:hover { transform: translateY(-15px) scale(1.15); z-index: 50; }
+
+.carta-flipper {
+    width: 100%; height: 100%;
+    position: relative;
+    transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.carta-contenedor.seleccionada { transform: translateY(-30px) scale(2.4); z-index: 1000; }
+.carta-contenedor.volteada .carta-flipper { transform: rotateY(180deg); }
+
+.cara-frontal, .cara-trasera {
+    width: 100%; height: 100%;
+    position: absolute; top: 0; left: 0;
+    backface-visibility: hidden;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+    border: 1px solid #c59b27;
+    background-color: #1a122a;
+}
+
+.cara-trasera {
+    background-image: url('imagenes/reverso_cartas.jpg');
+    background-size: cover; background-position: center;
+    transform: rotateY(0deg);
+}
+
+.cara-frontal { transform: rotateY(180deg); object-fit: cover; }
+
+.contenedor-cartas {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 12px; margin-top: 20px; margin-bottom: 20px;
+}
+
+.posicion-carta { width: 110px; height: 190px; position: relative; }
+
+.carta-animada {
+    width: 100%; height: 100%; border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.8);
+    border: 2px solid #c59b27; opacity: 0;
+    transform: translateY(20px);
+    animation: aparecerCarta 0.6s ease-out forwards;
+    object-fit: cover; background-color: #1a122a;
+}
+
+/* --- DISPOSICIONES GEOMÉTRICAS DE MESAS (ESPECIALES DE TAROT) --- */
+.mesa-pasado-presente-futuro { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 18px; }
+.mesa-pasado-presente-futuro .posicion-carta { width: 115px; height: 195px; }
+
+.mesa-espejo { display: grid; grid-template-columns: repeat(2, auto); gap: 10px; justify-content: center; justify-items: center; }
+.mesa-espejo .posicion-carta { width: 105px; height: 180px; }
+.mesa-espejo .pos-1 { grid-area: 1 / 1 / 2 / 2; }
+.mesa-espejo .pos-2 { grid-area: 1 / 2 / 2 / 3; }
+.mesa-espejo .pos-3 { grid-area: 2 / 1 / 3 / 3; }
+.mesa-espejo .pos-4 { grid-area: 3 / 1 / 4 / 3; }
+
+.mesa-encrucijada { display: grid; grid-template-columns: repeat(3, auto); grid-template-rows: repeat(3, auto); gap: 10px; justify-content: center; justify-items: center; align-items: center; }
+.mesa-encrucijada .posicion-carta { width: 95px; height: 160px; }
+.mesa-encrucijada .pos-1 { grid-area: 3 / 2 / 4 / 3; }
+.mesa-encrucijada .pos-2 { grid-area: 2 / 1 / 3 / 2; }
+.mesa-encrucijada .pos-3 { grid-area: 1 / 1 / 2 / 2; }
+.mesa-encrucijada .pos-4 { grid-area: 2 / 3 / 3 / 4; }
+.mesa-encrucijada .pos-5 { grid-area: 1 / 3 / 2 / 4; }
+
+.mesa-brujula { display: grid; grid-template-columns: repeat(3, auto); grid-template-rows: repeat(3, auto); gap: 10px; justify-content: center; justify-items: center; align-items: center; }
+.mesa-brujula .posicion-carta { width: 100px; height: 170px; }
+.mesa-brujula .pos-3 { grid-area: 1 / 2 / 2 / 3; }
+.mesa-brujula .pos-2 { grid-area: 2 / 1 / 3 / 2; }
+.mesa-brujula .pos-1 { grid-area: 2 / 2 / 3 / 3; }
+.mesa-brujula .pos-4 { grid-area: 2 / 3 / 3 / 4; }
+
+.mesa-aprendizaje { display: grid; grid-template-columns: repeat(2, auto); gap: 10px; justify-content: center; justify-items: center; }
+.mesa-aprendizaje .posicion-carta { width: 105px; height: 180px; }
+.mesa-aprendizaje .pos-3 { grid-area: 1 / 1 / 2 / 3; }
+.mesa-aprendizaje .pos-1 { grid-area: 2 / 1 / 3 / 2; }
+.mesa-aprendizaje .pos-2 { grid-area: 2 / 2 / 3 / 3; }
+
+.mesa-herradura { flex-wrap: nowrap; padding-bottom: 30px; margin-top: 20px; gap: 0; }
+.mesa-herradura .posicion-carta { width: 85px; height: 145px; margin: 0 -4px; }
+.mesa-herradura .pos-1 { transform: translateY(40px) rotate(-15deg); }
+.mesa-herradura .pos-2 { transform: translateY(20px) rotate(-8deg); }
+.mesa-herradura .pos-3 { transform: translateY(5px) rotate(-4deg); }
+.mesa-herradura .pos-4 { transform: translateY(0px) rotate(0deg); z-index: 2;}
+.mesa-herradura .pos-5 { transform: translateY(5px) rotate(4deg); }
+.mesa-herradura .pos-6 { transform: translateY(20px) rotate(8deg); }
+.mesa-herradura .pos-7 { transform: translateY(40px) rotate(15deg); }
+
+.mesa-cruz-celta { display: grid; grid-template-columns: repeat(4, auto); grid-template-rows: repeat(4, auto); gap: 8px; align-items: center; justify-items: center; max-width: 700px; margin: 15px auto; }
+.mesa-cruz-celta .posicion-carta { width: 85px; height: 145px; }
+.mesa-cruz-celta .pos-1 { grid-area: 2 / 2 / 3 / 3; z-index: 1; }
+.mesa-cruz-celta .pos-2 { grid-area: 2 / 2 / 3 / 3; transform: rotate(90deg); z-index: 2; }
+.mesa-cruz-celta .pos-3 { grid-area: 3 / 2 / 4 / 3; }
+.mesa-cruz-celta .pos-4 { grid-area: 2 / 1 / 3 / 2; }
+.mesa-cruz-celta .pos-5 { grid-area: 1 / 2 / 2 / 3; }
+.mesa-cruz-celta .pos-6 { grid-area: 2 / 3 / 3 / 4; }
+.mesa-cruz-celta .pos-7 { grid-area: 4 / 4 / 5 / 5; }
+.mesa-cruz-celta .pos-8 { grid-area: 3 / 4 / 4 / 5; }
+.mesa-cruz-celta .pos-9 { grid-area: 2 / 4 / 3 / 5; }
+.mesa-cruz-celta .pos-10 { grid-area: 1 / 4 / 2 / 5; }
+
+.mesa-mapamundi { display: grid; grid-template-columns: repeat(5, auto); grid-template-rows: repeat(5, auto); gap: 10px; justify-content: center; justify-items: center; align-items: center; max-width: 700px; margin: 10px auto; }
+.mesa-mapamundi .posicion-carta { width: 75px; height: 130px; }
+.mesa-mapamundi .pos-1  { grid-area: 3 / 1 / 4 / 2; }
+.mesa-mapamundi .pos-2  { grid-area: 4 / 1 / 5 / 2; }
+.mesa-mapamundi .pos-3  { grid-area: 5 / 2 / 6 / 3; }
+.mesa-mapamundi .pos-4  { grid-area: 5 / 3 / 6 / 4; }
+.mesa-mapamundi .pos-5  { grid-area: 5 / 4 / 6 / 5; }
+.mesa-mapamundi .pos-6  { grid-area: 4 / 5 / 5 / 6; }
+.mesa-mapamundi .pos-7  { grid-area: 3 / 5 / 4 / 6; }
+.mesa-mapamundi .pos-8  { grid-area: 2 / 5 / 3 / 6; }
+.mesa-mapamundi .pos-9  { grid-area: 1 / 4 / 2 / 5; }
+.mesa-mapamundi .pos-10 { grid-area: 1 / 3 / 2 / 4; }
+.mesa-mapamundi .pos-11 { grid-area: 1 / 2 / 2 / 3; }
+.mesa-mapamundi .pos-12 { grid-area: 2 / 1 / 3 / 2; }
+
+/* --- DISPOSICIONES GEOMÉTRICAS DE MESAS (ESPECIALES DE RUNAS) --- */
+.mesa-runas-lineal {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+/* Ficha universal de runas: BLOQUEAMOS ALTURA Y ANCHO para que sean perfectas y uniformes */
+.runa-ficha {
+    background: linear-gradient(145deg, #2a2533, #15101f);
+    border: 2px solid #c59b27;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    color: #f3d06c;
+    width: 95px;             /* Ancho fijo estricto */
+    height: 145px;           /* Altura fija estricta (reemplazamos min-height) */
+    box-sizing: border-box;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.img-runa {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 8px;
+}
+
+.mesa-yggdrasil {
+    display: grid;
+    grid-template-areas:
+        ". runa3 runa4 ."
+        "runa5 runa2 runa6 ."
+        ". runa1 . ."
+        "runa7 . runa9"
+        ". runa8 .";
+    gap: 15px;
+    justify-content: center;
+    align-items: center; /* Centramos el contenido dentro de sus celdas */
+    margin: 20px auto;
+}
+.mesa-yggdrasil .runa-ficha { justify-self: center; }
+
+.mesa-cruz-runica {
+    display: grid;
+    grid-template-areas:
+        ". runa3 ."
+        "runa1 . runa2"
+        ". runa4 .";
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+}
+.mesa-cruz-runica .runa-ficha { justify-self: center; }
+
+.mesa-cruz-celta-runas {
+    display: grid;
+    grid-template-areas:
+        ". runa6 ."
+        "runa1 runa5 runa3"
+        ". runa2 ."
+        ". runa4 .";
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+}
+.mesa-cruz-celta-runas .runa-ficha { justify-self: center; }
+
+.mesa-tirada-5-runas {
+    display: flex; 
+    flex-direction: column-reverse; 
+    align-items: center; 
+    gap: 10px;
+}
+
+/* TIRADA 7 RUNAS (MIMIR) CON EXCELENTE DISTRIBUCIÓN */
+.mesa-tirada-7-runas {
+    display: grid;
+    grid-template-columns: auto auto 20px auto auto 20px auto auto;
+    grid-template-areas:
+        "runa1 runa2 . runa3 runa4 . runa5 runa6"
+        ". . . runa7 runa7 . . .";
+    gap: 15px 8px;
+    justify-content: center;
+    align-items: center; /* Aseguramos alineación central sin estiramientos */
+    margin: 20px auto;
+    width: 100%;
+    max-width: 800px;
+}
+
+.mesa-tirada-7-runas .runa-ficha {
+    width: 85px;         
+    height: 140px;       /* Altura estrictamente fija para que la runa 7 no se encoja ni se estire */
+    justify-self: center; 
+}
+
+.mesa-tirada-7-runas .img-runa {
+    width: 60px;
+    height: 60px;
+}
+
+#resultado {
+    margin-top: 15px; padding: 20px;
+    background-color: rgba(10, 6, 20, 0.9);
+    border-left: 4px solid #c59b27;
+    border-radius: 0 8px 8px 0;
+    text-align: justify; line-height: 1.6;
+    font-size: 1.15em; max-height: 70vh; overflow-y: auto;
+}
+
+.btn-profundizar {
+    background: linear-gradient(135deg, #5b3e8c 0%, #35225c 100%);
+    color: #f3d06c; border: 1px solid #c59b27;
+    padding: 12px; font-size: 0.95em;
+    font-family: 'Playfair Display', serif; font-weight: bold;
+    cursor: pointer; border-radius: 8px; text-transform: uppercase;
+    letter-spacing: 1px; margin-top: 25px; width: 100%; transition: all 0.3s ease;
+}
+
+.btn-profundizar:hover:not(:disabled) {
+    background: linear-gradient(135deg, #724fb0 0%, #462c7a 100%);
+    box-shadow: 0 0 15px rgba(243, 208, 108, 0.3);
+}
+
+.btn-profundizar:disabled {
+    background: #2a2238; color: #7a6e93; border-color: #4a3f63;
+    cursor: not-allowed; box-shadow: none;
+}
+
+.control-audio {
+    position: fixed; bottom: 15px; right: 15px;
+    background-color: rgba(18, 12, 28, 0.95);
+    border: 1px solid #c59b27; color: #f3d06c;
+    padding: 8px 15px; border-radius: 30px;
+    font-family: 'Playfair Display', serif; cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 1000; transition: all 0.3s;
+}
+
+@keyframes aparecerCarta { to { opacity: 1; transform: translateY(0); } }
+
+/* --- REGLAS RESPONSIVE PARA CELULARES --- */
+@media (max-width: 600px) {
+    .contenedor-principal { padding: 20px 18px; max-height: 98vh; }
+    h1 { font-size: 1.9em; }
+    .tarjeta-carrusel { flex: 0 0 190px; min-height: 110px; }
+    .mesa-pasado-presente-futuro { gap: 8px; }
+    .mesa-pasado-presente-futuro .posicion-carta { width: 85px; height: 145px; }
+    .mesa-herradura .posicion-carta { width: 45px; height: 80px; }
+    .mesa-cruz-celta .posicion-carta { width: 55px; height: 95px; }
+    .btn-flecha-carrusel { width: 30px; height: 30px; font-size: 1.1em; }
     
-    elementoContenedor.classList.add('seleccionada', 'volteada');
-
-    ultimaPregunta = "Carta del Día";
-    ultimasCartas = [cartaElegida];
-
-    const divResultado = document.getElementById('resultado');
-    
-    setTimeout(async () => {
-        divResultado.innerHTML = "";
-
-        const titulo = document.createElement('strong');
-        titulo.style.color = "#f3d06c";
-        titulo.style.fontSize = "1.2em";
-        titulo.textContent = `✨ Tu Carta del Día: ${cartaElegida} ✨`;
-
-        const contenedorCarta = document.createElement('div');
-        contenedorCarta.className = "contenedor-cartas";
-        const pos = document.createElement('div');
-        pos.className = "posicion-carta";
-        const img = document.createElement('img');
-        img.className = "carta-animada";
-        img.src = `imagenes/${archivoRider}`;
-        img.alt = cartaElegida;
-        pos.appendChild(img);
-        contenedorCarta.appendChild(pos);
-
-        const loader = document.createElement('p');
-        loader.innerHTML = "<em style='color: #f3d06c;'>Canalizando el mensaje del oráculo...</em>";
-
-        divResultado.appendChild(titulo);
-        divResultado.appendChild(contenedorCarta);
-        divResultado.appendChild(loader);
-
-        try {
-            const respuesta = await fetch('/api/consultar-tarot', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    pregunta: "Carta del Día",
-                    cartas: [cartaElegida],
-                    idTirada: "1",
-                    cantidadCartas: 1
-                })
-            });
-
-            if (!respuesta.ok) throw new Error("Error en la respuesta del servidor.");
-            const datos = await respuesta.json();
-
-            loader.remove();
-
-            const textoReflexion = document.createElement('div');
-            textoReflexion.style.marginTop = "15px";
-            textoReflexion.innerHTML = formatearTextoMarkdown(datos.lectura);
-            divResultado.appendChild(textoReflexion);
-
-            crearBotonProfundizar(divResultado);
-
-        } catch (error) {
-            loader.innerHTML = "<span style='color: #ff6b6b;'>No se pudo obtener el mensaje de la Carta del Día en este momento.</span>";
-        }
-    }, 1000);
-}
-
-// --- CONSULTA GENERAL DE TAROT ---
-async function realizarConsultaTarot(cantidadCartas, idTirada) {
-    const pregunta = document.getElementById('preguntaUsuario').value;
-    const divResultado = document.getElementById('resultado');
-
-    pantallaBienvenida.style.display = "none";
-    pantallaTiradas.style.display = "none";
-    pantallaRecomendacion.style.display = "none";
-    pantallaLectura.style.display = "flex";
-
-    // NOS ASEGURAMOS QUE EL BOTÓN VUELVA A APARECER PARA TIRADAS NORMALES
-    const btnOtraConsulta = document.getElementById('btnHacerOtraConsulta');
-    if (btnOtraConsulta) {
-        btnOtraConsulta.style.display = ""; 
+    .mesa-tirada-7-runas { 
+        grid-template-columns: auto auto 2px auto auto 2px auto auto;
+        gap: 10px 2px;
+        overflow-x: auto;
+        padding-bottom: 10px;
     }
-
-    divResultado.innerHTML = "";
-    const loader = document.createElement('p');
-    loader.innerHTML = "<strong style='color: #f3d06c;'>Barajando el mazo y canalizando la energía... 🔮</strong>";
-    divResultado.appendChild(loader);
-
-    const mazoMezclado = mezclarMazo(mazo);
-    const cartasSeleccionadas = mazoMezclado.slice(0, cantidadCartas);
-
-    ultimaPregunta = pregunta;
-    ultimasCartas = cartasSeleccionadas;
-
-    let claseMesa = "contenedor-cartas ";
-    if (idTirada === "3") claseMesa += "mesa-pasado-presente-futuro";
-    else if (idTirada === "3_ap") claseMesa += "mesa-aprendizaje";
-    else if (idTirada === "4_lab") claseMesa += "mesa-brujula";
-    else if (idTirada === "4_am" || (cantidadCartas === 4 && idTirada !== "4_lab")) claseMesa += "mesa-espejo";
-    else if (idTirada.startsWith("5")) claseMesa += "mesa-encrucijada";
-    else if (idTirada === "7") claseMesa += "mesa-herradura";
-    else if (idTirada === "10") claseMesa += "mesa-cruz-celta";
-    else if (idTirada === "12") claseMesa += "mesa-mapamundi";
-
-    try {
-        const respuesta = await fetch('/api/consultar-tarot', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pregunta, cartas: cartasSeleccionadas, idTirada, cantidadCartas })
-        });
-
-        if (!respuesta.ok) throw new Error("Error en el servidor.");
-
-        const datos = await respuesta.json();
-        divResultado.innerHTML = "";
-
-        const tituloPregunta = document.createElement('h3');
-        tituloPregunta.style.color = "#f3d06c";
-        tituloPregunta.textContent = `Tu Pregunta: ${pregunta}`;
-        divResultado.appendChild(tituloPregunta);
-
-        const contenedorCartas = document.createElement('div');
-        contenedorCartas.className = claseMesa;
-
-        cartasSeleccionadas.forEach((carta, index) => {
-            const pos = document.createElement('div');
-            pos.className = `posicion-carta pos-${index + 1}`;
-            
-            const img = document.createElement('img');
-            img.src = `imagenes/${imagenesRiderWaite[carta]}`;
-            img.className = 'carta-animada';
-            img.style.animationDelay = `${index * 0.2}s`;
-            img.alt = carta;
-            
-            pos.appendChild(img);
-            contenedorCartas.appendChild(pos);
-        });
-        divResultado.appendChild(contenedorCartas);
-
-        const textoIA = document.createElement('div');
-        textoIA.style.marginTop = "15px";
-        textoIA.innerHTML = formatearTextoMarkdown(datos.lectura);
-        divResultado.appendChild(textoIA);
-
-        crearBotonProfundizar(divResultado);
-
-    } catch (error) {
-        divResultado.innerHTML = "<p style='color: #ff6b6b;'>Hubo un problema de conexión al procesar la lectura.</p>";
+    .mesa-tirada-7-runas .runa-ficha { 
+        width: 55px; 
+        height: 105px; /* Fijamos la altura también en móviles */
+        padding: 4px; 
     }
-}
-
-// --- CONSULTA DE RUNAS VIKINGAS ---
-async function realizarConsultaRunas(cantidadRunas, idTirada) {
-    const pregunta = document.getElementById('preguntaUsuario').value;
-    const divResultado = document.getElementById('resultado');
-
-    pantallaBienvenida.style.display = "none";
-    pantallaTiradas.style.display = "none";
-    pantallaRecomendacion.style.display = "none";
-    pantallaLectura.style.display = "flex";
-
-    // NOS ASEGURAMOS QUE EL BOTÓN VUELVA A APARECER PARA TIRADAS NORMALES
-    const btnOtraConsulta = document.getElementById('btnHacerOtraConsulta');
-    if (btnOtraConsulta) {
-        btnOtraConsulta.style.display = ""; 
+    .mesa-tirada-7-runas .img-runa {
+        width: 35px;
+        height: 35px;
     }
-
-    divResultado.innerHTML = "";
-    const loader = document.createElement('p');
-    loader.innerHTML = "<strong style='color: #f3d06c;'>Tallando y arrojando las runas sagradas... ᛟ</strong>";
-    divResultado.appendChild(loader);
-
-    const runasMezcladas = mezclarRunas(mazoRunas);
-    const runasSeleccionadas = runasMezcladas.slice(0, cantidadRunas);
-
-    ultimaPregunta = pregunta;
-    ultimasCartas = runasSeleccionadas.map(r => r.nombre);
-
-    let claseMesaRunas = "mesa-runas-lineal";
-    if (idTirada === "runa_odin" || idTirada === "nornas") claseMesaRunas = "mesa-runas-lineal";
-    else if (idTirada === "cruz_runica") claseMesaRunas = "mesa-cruz-runica";
-    else if (idTirada === "tirada_5") claseMesaRunas = "mesa-tirada-5-runas";
-    else if (idTirada === "cruz_celta" || idTirada === "martillo_thor") claseMesaRunas = "mesa-cruz-celta-runas";
-    else if (idTirada === "tirada_7") claseMesaRunas = "mesa-tirada-7-runas";
-    else if (idTirada === "yggdrasil") claseMesaRunas = "mesa-yggdrasil";
-
-    try {
-        const respuesta = await fetch('/api/consultar-runas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                pregunta, 
-                runas: ultimasCartas, 
-                idTirada, 
-                cantidadRunas 
-            })
-        });
-
-        if (!respuesta.ok) throw new Error("Error en el servidor de runas.");
-
-        const datos = await respuesta.json();
-        divResultado.innerHTML = "";
-
-        const tituloPregunta = document.createElement('h3');
-        tituloPregunta.style.color = "#f3d06c";
-        tituloPregunta.textContent = `Tu Consulta Rúnica: ${pregunta}`;
-        divResultado.appendChild(tituloPregunta);
-
-        const contenedorRunas = document.createElement('div');
-        contenedorRunas.className = claseMesaRunas;
-
-        runasSeleccionadas.forEach((runa, index) => {
-            const ficha = document.createElement('div');
-            ficha.className = "runa-ficha";
-            ficha.style.animation = `aparecerCarta 0.6s ease-out ${index * 0.2}s forwards`;
-
-            // === LÓGICA GEOMÉTRICA DE RUNAS ===
-            if (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") {
-                ficha.style.gridArea = `runa${index + 1}`;
-            }
-
-            const imgRuna = document.createElement('img');
-            imgRuna.src = `runas_imagenes/${runa.id}.png`;
-            imgRuna.alt = runa.nombre;
-            imgRuna.className = "img-runa";
-
-            const nombreRuna = document.createElement('strong');
-            nombreRuna.style.display = "block";
-            nombreRuna.style.fontFamily = "'Playfair Display', serif";
-            nombreRuna.style.fontSize = "0.95em";
-            nombreRuna.textContent = `${index + 1}. ${runa.nombre}`;
-
-            ficha.appendChild(imgRuna);
-            ficha.appendChild(nombreRuna);
-            contenedorRunas.appendChild(ficha);
-        });
-
-        divResultado.appendChild(contenedorRunas);
-
-        const textoIA = document.createElement('div');
-        textoIA.style.marginTop = "15px";
-        textoIA.innerHTML = formatearTextoMarkdown(datos.lectura);
-        divResultado.appendChild(textoIA);
-
-    } catch (error) {
-        divResultado.innerHTML = "<p style='color: #ff6b6b;'>Hubo un problema de conexión al procesar la lectura rúnica.</p>";
-    }
-}
-
-// --- LÓGICA DEL BOTÓN DE PROFUNDIZACIÓN ---
-function crearBotonProfundizar(contenedor) {
-    const btn = document.createElement('button');
-    btn.className = 'btn-profundizar';
-    btn.textContent = '💡 PROFUNDIZAR EN ESTA LECTURA';
-
-    btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        btn.textContent = '✨ Ya se profundizó en esta lectura';
-
-        const seccionProfundizacion = document.createElement('div');
-        seccionProfundizacion.style.marginTop = "25px";
-        seccionProfundizacion.style.padding = "15px";
-        seccionProfundizacion.style.backgroundColor = "rgba(42, 28, 68, 0.8)";
-        seccionProfundizacion.style.borderRadius = "8px";
-        seccionProfundizacion.style.border = "1px solid #c59b27";
-        seccionProfundizacion.innerHTML = "<em style='color: #f3d06c;'>Canalizando una explicación más profunda y detallada de la tirada... 🔮</em>";
-        contenedor.appendChild(seccionProfundizacion);
-
-        try {
-            const respuesta = await fetch('/api/profundizar-tarot', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    pregunta: ultimaPregunta, 
-                    cartas: ultimasCartas 
-                })
-            });
-
-            if (!respuesta.ok) throw new Error("Error al profundizar la lectura.");
-
-            const datos = await respuesta.json();
-            seccionProfundizacion.innerHTML = `
-                <strong style='color: #f3d06c; font-family: "Playfair Display", serif; font-size: 1.2em;'>✨ Clarificación y Profundización del Oráculo:</strong><br><br>
-                ${formatearTextoMarkdown(datos.profundizacion)}
-            `;
-
-            seccionProfundizacion.scrollIntoView({ behavior: 'smooth' });
-
-        } catch (error) {
-            seccionProfundizacion.innerHTML = "<span style='color: #ff6b6b;'>No se pudo conectar para profundizar la lectura en este momento. Verificá la conexión con el servidor.</span>";
-        }
-    });
-
-    contenedor.appendChild(btn);
+    .mesa-tirada-7-runas strong { font-size: 0.7em; }
 }
