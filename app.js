@@ -146,7 +146,8 @@ function ejecutarTiradaElegida(idTirada) {
         realizarConsultaTarot(cantidad, idTirada);
     } else {
         let cantidadRunas = 1;
-        if (idTirada === "nornas") cantidadRunas = 3;
+        if (idTirada === "runa_odin") cantidadRunas = 1;
+        else if (idTirada === "nornas") cantidadRunas = 3;
         else if (idTirada === "cruz_runica") cantidadRunas = 4;
         else if (idTirada === "tirada_5") cantidadRunas = 5;
         else if (idTirada === "cruz_celta" || idTirada === "martillo_thor") cantidadRunas = 6;
@@ -401,7 +402,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
     ultimasCartas = runasSeleccionadas.map(r => r.nombre);
 
     let claseMesaRunas = "mesa-runas-lineal";
-    if (idTirada === "nornas") claseMesaRunas = "mesa-runas-lineal";
+    if (idTirada === "runa_odin" || idTirada === "nornas") claseMesaRunas = "mesa-runas-lineal";
     else if (idTirada === "cruz_runica") claseMesaRunas = "mesa-cruz-runica";
     else if (idTirada === "tirada_5") claseMesaRunas = "mesa-tirada-5-runas";
     else if (idTirada === "cruz_celta" || idTirada === "martillo_thor") claseMesaRunas = "mesa-cruz-celta-runas";

@@ -22,12 +22,17 @@ export const mazoRunas = [
     { id: "ehwaz", nombre: "Ehwaz", simbolo: "ᛖ" },
     { id: "mannaz", nombre: "Mannaz", simbolo: "ᛗ" },
     { id: "laguz", nombre: "Laguz", simbolo: "ᛚ" },
-    { id: "ingwaz", nombre: "Ingwaz", simbolo: "ᛝ" },
+    { id: "ingwas", nombre: "Ingwaz", simbolo: "ᛝ" },
     { id: "dagaz", nombre: "Dagaz", simbolo: "ᛞ" },
     { id: "othala", nombre: "Othala", simbolo: "ᛟ" }
 ];
 
 export const catalogoTiradasRunas = [
+    { 
+        id: "runa_odin", 
+        nombre: "La Runa de Odín (1)", 
+        desc: "Perspectiva directa, energía de la situación y consejo intuitivo." 
+    },
     { 
         id: "cruz_runica", 
         nombre: "Cruz Rúnica (4)", 

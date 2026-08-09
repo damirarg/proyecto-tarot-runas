@@ -124,7 +124,10 @@ app.post('/api/consultar-runas', async (req, res) => {
 
         let detallePosiciones = "";
 
-        if (idTirada === "cruz_runica") {
+        if (idTirada === "runa_odin") {
+            detallePosiciones = `Tirada: La Runa de Odín (1 runa).
+            - Runa 1: Indica la energía que rige sobre la situación. Marca el rumbo de los acontecimientos y actitudes a seguir, previniendo al consultante sobre cómo actuar. Proporciona una perspectiva directa, fresca y simple que invita a la intuición. Da un consejo claro y concreto.`;
+        } else if (idTirada === "cruz_runica") {
             detallePosiciones = `Tirada: Cruz Rúnica (4 runas).
             - Runa 1 (Izquierda): La situación tal cual se presenta en tu vida.
             - Runa 2 (Derecha): Lo que se opone a tus intereses o te bloquea (obstáculo).
