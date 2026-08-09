@@ -126,10 +126,10 @@ app.post('/api/consultar-runas', async (req, res) => {
 
         if (idTirada === "cruz_runica") {
             detallePosiciones = `Tirada: Cruz Rúnica (4 runas).
-            - Runa 1: Situación tal cual se presenta.
-            - Runa 2: Oposición, bloqueo u obstáculo.
-            - Runa 3: Discernimiento y reflexión sobre el contexto.
-            - Runa 4: Consejo de las runas / advertencia.`;
+            - Runa 1 (Izquierda): La situación tal cual se presenta en tu vida.
+            - Runa 2 (Derecha): Lo que se opone a tus intereses o te bloquea (obstáculo).
+            - Runa 3 (Arriba): Discernimiento, lo que hay que reflexionar.
+            - Runa 4 (Abajo): Consejo de las runas / advertencia.`;
         } else if (idTirada === "nornas") {
             detallePosiciones = `Tirada: Tríptico de las Nornas (3 runas).
             - Runa 1 (Urdh): El Pasado / Cómo se generó la situación.

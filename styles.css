@@ -438,13 +438,13 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 .mesa-cruz-runica {
     display: grid;
     grid-template-areas: 
-        ". arbol ."
-        "izq centro der"
-        ". abajo .";
-    gap: 12px;
+        ". runa3 ."
+        "runa1 . runa2"
+        ". runa4 .";
+    gap: 20px;
     justify-content: center;
     align-items: center;
-    margin: 20px auto;
+    margin: 30px auto;
 }
 
 /* Tirada de 5 Runas en columna vertical ascendente */
