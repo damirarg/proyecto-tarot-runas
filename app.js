@@ -101,6 +101,11 @@ document.getElementById('btnPortalTarot')?.addEventListener('click', () => {
     detenerNieve();
     manejarAudioPorReino();
     
+    // CAMBIO DINÁMICO DE EMOJI PARA EL TAROT (Puerta Mística)
+    document.querySelectorAll('.btn-salir-reino').forEach(btn => {
+        btn.textContent = "🚪 Salir del Reino";
+    });
+    
     if (pantallaPortales) pantallaPortales.style.display = "none";
     if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
     
@@ -120,6 +125,11 @@ document.getElementById('btnPortalRunas')?.addEventListener('click', () => {
     if (contenedorPrincipal) contenedorPrincipal.classList.add('modo-reino');
     iniciarNieve();
     manejarAudioPorReino();
+    
+    // CAMBIO DINÁMICO DE EMOJI PARA LAS RUNAS (Casco Vikingo / Escudo)
+    document.querySelectorAll('.btn-salir-reino').forEach(btn => {
+        btn.textContent = "🪖 Salir del Reino";
+    });
     
     if (pantallaPortales) pantallaPortales.style.display = "none";
     if (pantallaBienvenida) pantallaBienvenida.style.display = "flex";
@@ -246,7 +256,8 @@ function ejecutarTiradaElegida(idTirada) {
         else if (idTirada === "nornas") cantidadRunas = 3;
         else if (idTirada === "cruz_runica") cantidadRunas = 4;
         else if (idTirada === "tirada_5") cantidadRunas = 5;
-        else if (idTirada === "cruz_celta" || idTirada === "martillo_thor") cantidadRunas = 6;
+        else if (idTirada === "cruz_celta") cantidadRunas = 6;
+        else if (idTirada === "martillo_thor") cantidadRunas = 6;
         else if (idTirada === "tirada_7") cantidadRunas = 7;
         else if (idTirada === "yggdrasil") cantidadRunas = 9;
 
@@ -442,10 +453,15 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         
         runasSeleccionadas.forEach((runa, index) => {
             let gridArea = (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") ? `grid-area: runa${index + 1};` : "";
+            
+            // CAMBIO APLICADO: Separamos el número y el nombre de la runa en dos renglones
             HTMLRunas += `
                 <div class="runa-ficha" style="animation: aparecerCarta 0.6s ease-out ${index * 0.2}s forwards; ${gridArea}">
                     <img src="runas_imagenes/${runa.id}.png" alt="${runa.nombre}" class="img-runa">
-                    <strong style="display: block; font-family: 'Playfair Display', serif; font-size: 0.95em;">${index + 1}. ${runa.nombre}</strong>
+                    <strong style="display: block; font-family: 'Playfair Display', serif; font-size: 0.95em; line-height: 1.2;">
+                        <span style="opacity: 0.8; font-size: 0.9em;">${index + 1}.</span><br>
+                        ${runa.nombre}
+                    </strong>
                 </div>`;
         });
         HTMLRunas += `</div><div style="margin-top: 15px;">${formatearTextoMarkdown(datos.lectura)}</div>`;
