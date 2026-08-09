@@ -442,7 +442,8 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             ficha.style.padding = "12px";
             ficha.style.textAlign = "center";
             ficha.style.color = "#f3d06c";
-            ficha.style.width = "110px";
+            // Ajustamos un poco el ancho para que no desborde en la tirada de 7
+            ficha.style.width = "95px"; 
             ficha.style.boxShadow = "0 8px 20px rgba(0,0,0,0.8)";
             ficha.style.animation = `aparecerCarta 0.6s ease-out ${index * 0.2}s forwards`;
 
@@ -454,8 +455,8 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             const imgRuna = document.createElement('img');
             imgRuna.src = `runas_imagenes/${runa.id}.png`;
             imgRuna.alt = runa.nombre;
-            imgRuna.style.width = "85px";
-            imgRuna.style.height = "85px";
+            imgRuna.style.width = "75px"; // Ajustado para mantener la proporción
+            imgRuna.style.height = "75px";
             imgRuna.style.objectFit = "contain";
             imgRuna.style.marginBottom = "8px";
 

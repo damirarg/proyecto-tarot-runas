@@ -423,13 +423,20 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
 /* NUEVA MESA: TIRADA 7 RUNAS (MIMIR) */
 .mesa-tirada-7-runas {
     display: grid;
-    /* Usamos 8 columnas para poder separar los tres pares de la fila superior y centrar la runa 7 abajo */
+    grid-template-columns: repeat(6, auto);
     grid-template-areas:
-        "runa1 runa2 . runa3 runa4 . runa5 runa6"
-        ". . . runa7 runa7 . . .";
-    gap: 15px;
+        "runa1 runa2 runa3 runa4 runa5 runa6"
+        ". . runa7 runa7 . .";
+    gap: 15px 12px;
     justify-content: center;
+    align-items: center;
     margin: 20px auto;
+}
+
+/* Separamos visualmente los pares (Pasado, Presente, Futuro) */
+.mesa-tirada-7-runas > div:nth-child(2),
+.mesa-tirada-7-runas > div:nth-child(4) {
+    margin-right: 25px;
 }
 
 .runa-ficha {
@@ -492,5 +499,10 @@ button.btn-principal, button.btn-secundario, .btn-carta-dia, .btn-ir-tiradas {
     .mesa-herradura .posicion-carta { width: 45px; height: 80px; }
     .mesa-cruz-celta .posicion-carta { width: 55px; height: 95px; }
     .btn-flecha-carrusel { width: 30px; height: 30px; font-size: 1.1em; }
-    .mesa-tirada-7-runas { gap: 5px; }
+    
+    .mesa-tirada-7-runas { gap: 10px 5px; }
+    .mesa-tirada-7-runas > div:nth-child(2),
+    .mesa-tirada-7-runas > div:nth-child(4) {
+        margin-right: 10px;
+    }
 }
