@@ -52,7 +52,7 @@ app.post('/api/consultar-tarot', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama3-8b-8192", 
+                model: "llama-3.1-8b-instant", // <-- MODELO ACTUALIZADO
                 temperature: 0.2,
                 max_tokens: 1200,
                 messages: [
@@ -92,7 +92,7 @@ app.post('/api/profundizar-tarot', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama3-8b-8192",
+                model: "llama-3.1-8b-instant", // <-- MODELO ACTUALIZADO
                 temperature: 0.2,
                 max_tokens: 1000,
                 messages: [
@@ -117,7 +117,6 @@ app.post('/api/profundizar-tarot', async (req, res) => {
     }
 });
 
-// NUEVO: Ruta específica para profundizar en las Runas
 app.post('/api/profundizar-runas', async (req, res) => {
     try {
         const { pregunta, runas } = req.body;
@@ -133,11 +132,11 @@ app.post('/api/profundizar-runas', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama3-8b-8192",
+                model: "llama-3.1-8b-instant", // <-- MODELO ACTUALIZADO
                 temperature: 0.2,
                 max_tokens: 1000,
                 messages: [
-                    { role: "system", content: PERSONALIDAD_RUNAS }, // Usa la personalidad rúnica
+                    { role: "system", content: PERSONALIDAD_RUNAS },
                     { role: "user", content: instrucciones }
                 ]
             })
@@ -239,7 +238,7 @@ app.post('/api/consultar-runas', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama3-8b-8192", 
+                model: "llama-3.1-8b-instant", // <-- MODELO ACTUALIZADO
                 temperature: 0.3,
                 max_tokens: 1500,
                 messages: [
