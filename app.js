@@ -94,10 +94,8 @@ const pantallaLectura = document.getElementById('pantalla-lectura');
 const contenedorPrincipal = document.getElementById('contenedor-principal');
 
 document.getElementById('btnPortalTarot')?.addEventListener('click', function() {
-    // 1. Iniciamos la animación de la puerta
     this.classList.add('abierta');
     
-    // 2. Esperamos 1 segundo para que la puerta se abra por completo antes de entrar
     setTimeout(() => {
         modoActual = "tarot";
         document.body.className = 'bg-tarot'; 
@@ -121,7 +119,6 @@ document.getElementById('btnPortalTarot')?.addEventListener('click', function() 
         const textoRitualDia = document.getElementById('textoRitualDia');
         if (textoRitualDia) textoRitualDia.textContent = "Carta del Día";
 
-        // 3. Reseteamos la puerta a "cerrada" por si el usuario vuelve a la pantalla inicial
         this.classList.remove('abierta');
     }, 1000); 
 });
@@ -486,6 +483,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
     }
 }
 
+// NUEVA FUNCIÓN: Ahora el botón usa la clase en lugar de estilos en línea
 function crearBotonProfundizar(contenedor) {
     const btn = document.createElement('button');
     btn.className = 'btn-profundizar';
@@ -496,19 +494,19 @@ function crearBotonProfundizar(contenedor) {
         btn.textContent = '✨ Ya se profundizó en esta lectura';
 
         const seccionProfundizacion = document.createElement('div');
-        seccionProfundizacion.style.marginTop = "25px";
-        seccionProfundizacion.style.padding = "15px";
-        seccionProfundizacion.style.backgroundColor = "rgba(42, 28, 68, 0.8)";
-        seccionProfundizacion.style.borderRadius = "8px";
-        seccionProfundizacion.style.border = "1px solid #c59b27";
-        seccionProfundizacion.innerHTML = "<em style='color: #f3d06c;'>Canalizando una explicación más profunda y detallada de la tirada... 🔮</em>";
+        seccionProfundizacion.className = 'caja-profundizacion'; // <-- ACÁ APLICAMOS LA CLASE CSS
+        seccionProfundizacion.innerHTML = `<em>Canalizando una explicación más profunda y detallada de la tirada... 🔮</em>`;
         contenedor.appendChild(seccionProfundizacion);
 
         try {
-            const respuesta = await fetch('/api/profundizar-tarot', {
+            // LÓGICA INTELIGENTE: Elige el servidor de Tarot o Runas según el modoActual
+            const endpoint = modoActual === "tarot" ? '/api/profundizar-tarot' : '/api/profundizar-runas';
+            const payload = modoActual === "tarot" ? { pregunta: ultimaPregunta, cartas: ultimasCartas } : { pregunta: ultimaPregunta, runas: ultimasCartas };
+
+            const respuesta = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pregunta: ultimaPregunta, cartas: ultimasCartas })
+                body: JSON.stringify(payload)
             });
             
             if (!respuesta.ok) {
@@ -518,7 +516,7 @@ function crearBotonProfundizar(contenedor) {
             
             const datos = await respuesta.json();
             
-            seccionProfundizacion.innerHTML = `<strong style='color: #f3d06c; font-family: "Playfair Display", serif; font-size: 1.2em;'>✨ Clarificación y Profundización del Oráculo:</strong><br><br>${formatearTextoMarkdown(datos.profundizacion)}`;
+            seccionProfundizacion.innerHTML = `<strong>✨ Clarificación y Profundización del Oráculo:</strong><br><br>${formatearTextoMarkdown(datos.profundizacion)}`;
             seccionProfundizacion.scrollIntoView({ behavior: 'smooth' });
 
         } catch (error) { 

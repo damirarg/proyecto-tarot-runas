@@ -52,7 +52,7 @@ app.post('/api/consultar-tarot', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
+                model: "llama3-8b-8192", 
                 temperature: 0.2,
                 max_tokens: 1200,
                 messages: [
@@ -65,7 +65,6 @@ app.post('/api/consultar-tarot', async (req, res) => {
         if (!respuestaGroq.ok) {
             const detalleError = await respuestaGroq.text();
             console.error("Error en API Groq (Tarot):", respuestaGroq.status, detalleError);
-            // Ahora enviamos el error técnico exacto al frontend
             return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
         }
 
@@ -93,7 +92,7 @@ app.post('/api/profundizar-tarot', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
+                model: "llama3-8b-8192",
                 temperature: 0.2,
                 max_tokens: 1000,
                 messages: [
@@ -105,7 +104,7 @@ app.post('/api/profundizar-tarot', async (req, res) => {
 
         if (!respuestaGroq.ok) {
             const detalleError = await respuestaGroq.text();
-            console.error("Error en API Groq (Profundización):", respuestaGroq.status, detalleError);
+            console.error("Error en API Groq (Profundización Tarot):", respuestaGroq.status, detalleError);
             return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
         }
 
@@ -115,6 +114,47 @@ app.post('/api/profundizar-tarot', async (req, res) => {
     } catch (error) {
         console.error("Error interno en profundización:", error);
         res.status(500).json({ error: "Error interno en el servidor de profundización." });
+    }
+});
+
+// NUEVO: Ruta específica para profundizar en las Runas
+app.post('/api/profundizar-runas', async (req, res) => {
+    try {
+        const { pregunta, runas } = req.body;
+        const listaRunasTexto = Array.isArray(runas) ? runas.join(", ") : (runas || "de la tirada");
+
+        const instrucciones = `El usuario consultó sobre: "${pregunta || 'su inquietud'}" con las runas: ${listaRunasTexto}.
+        Por favor, ofrecé una clarificación adicional, desglosando con mayor sencillez y profundidad el consejo global de estas runas para disipar cualquier duda. Sé cálido, claro, alentador y recordá que estás hablando de la sabiduría rúnica (no uses la palabra "carta"). Usa formato Markdown con **negritas** para los títulos.`;
+
+        const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${API_KEY_GROQ}`
+            },
+            body: JSON.stringify({
+                model: "llama3-8b-8192",
+                temperature: 0.2,
+                max_tokens: 1000,
+                messages: [
+                    { role: "system", content: PERSONALIDAD_RUNAS }, // Usa la personalidad rúnica
+                    { role: "user", content: instrucciones }
+                ]
+            })
+        });
+
+        if (!respuestaGroq.ok) {
+            const detalleError = await respuestaGroq.text();
+            console.error("Error en API Groq (Profundización Runas):", respuestaGroq.status, detalleError);
+            return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
+        }
+
+        const datos = await respuestaGroq.json();
+        res.json({ profundizacion: datos.choices[0].message.content });
+
+    } catch (error) {
+        console.error("Error interno en profundización de runas:", error);
+        res.status(500).json({ error: "Error interno en el servidor de profundización rúnica." });
     }
 });
 
@@ -199,7 +239,7 @@ app.post('/api/consultar-runas', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
+                model: "llama3-8b-8192", 
                 temperature: 0.3,
                 max_tokens: 1500,
                 messages: [
