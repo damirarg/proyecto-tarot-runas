@@ -114,7 +114,7 @@ document.getElementById('btnPortalTarot')?.addEventListener('click', function() 
         if (titulo) titulo.textContent = "Oráculo del Tarot";
         
         const cartaDecorativa = document.getElementById('cartaDecorativa');
-        if (cartaDecorativa) cartaDecorativa.src = "imagenes/00_TheFool.jpg"; 
+        if (cartaDecorativa) cartaDecorativa.src = "imagenes/RWS_Tarot_00_Fool.jpg";
         
         const textoRitualDia = document.getElementById('textoRitualDia');
         if (textoRitualDia) textoRitualDia.textContent = "Carta del Día";
