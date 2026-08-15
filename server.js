@@ -263,6 +263,10 @@ app.post('/api/consultar-runas', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`✨ Servidor corriendo con éxito en http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`✨ Servidor corriendo con éxito en http://localhost:${PORT}`);
+    });
+}
+
+export default app;

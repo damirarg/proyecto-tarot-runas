@@ -408,9 +408,9 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
         
         const datos = await respuesta.json();
         
-        divResultado.innerHTML = `<h3 style="color: #f3d06c;">Tu Pregunta: ${pregunta}</h3><div class="${claseMesa}">` + 
+        divResultado.innerHTML = `<h3 class="titulo-consulta">Tu Pregunta: ${pregunta}</h3><div class="${claseMesa}">` + 
             cartasSeleccionadas.map((carta, index) => `<div class="posicion-carta pos-${index + 1}"><img src="imagenes/${imagenesRiderWaite[carta]}" class="carta-animada" style="animation-delay: ${index * 0.2}s" alt="${carta}"></div>`).join('') +
-            `</div><div style="margin-top: 15px;">${formatearTextoMarkdown(datos.lectura)}</div>`;
+            `</div><div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>`;
         
         crearBotonProfundizar(divResultado);
     } catch (error) { 
@@ -458,7 +458,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         
         const datos = await respuesta.json();
         
-        let HTMLRunas = `<h3 style="color: #f3d06c;">Tu Consulta Rúnica: ${pregunta}</h3><div class="${claseMesaRunas}">`;
+        let HTMLRunas = `<h3 class="titulo-consulta">Tu Consulta Rúnica: ${pregunta}</h3><div class="${claseMesaRunas}">`;
         
         runasSeleccionadas.forEach((runa, index) => {
             let gridArea = (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") ? `grid-area: runa${index + 1};` : "";
@@ -472,7 +472,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
                     </strong>
                 </div>`;
         });
-        HTMLRunas += `</div><div style="margin-top: 15px;">${formatearTextoMarkdown(datos.lectura)}</div>`;
+        HTMLRunas += `</div><div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>`;
         
         divResultado.innerHTML = HTMLRunas;
         crearBotonProfundizar(divResultado);

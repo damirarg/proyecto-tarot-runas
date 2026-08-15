@@ -15,6 +15,11 @@ body {
     align-items: center;
     box-sizing: border-box;
     transition: background 1.5s ease-in-out; 
+    overflow-x: hidden;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
 /* Fondos Dinámicos de los Reinos */
@@ -33,6 +38,43 @@ body.bg-runas { background: url('imagenes/imagen_vikinga.jpg') no-repeat center 
     transition: all 0.5s ease;
 }
 
+.pantalla {
+    width: 100%;
+}
+
+.pantalla-portales {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.pantalla-bienvenida,
+.pantalla-tiradas,
+.pantalla-recomendacion,
+.pantalla-lectura {
+    display: none;
+    flex-direction: column;
+}
+
+.pantalla-bienvenida {
+    align-items: center;
+}
+
+.hero-portales,
+.contenedor-puertas-portal,
+.footer-inicio {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-portales {
+    text-align: center;
+    margin-bottom: 20px;
+    max-width: 100%;
+}
+
 .contenedor-principal.modo-reino {
     background-color: rgba(15, 8, 25, 0.85); 
     border: 1px solid rgba(197, 155, 39, 0.4); 
@@ -45,7 +87,17 @@ body.bg-runas { background: url('imagenes/imagen_vikinga.jpg') no-repeat center 
     max-width: 900px;
 }
 
+.contenedor-principal.modo-reino:has(#pantalla-lectura[style*="flex"]) {
+    justify-content: flex-start;
+    max-height: none;
+    overflow-y: visible;
+}
+
 h1 { font-family: 'Playfair Display', serif; color: #f3d06c; text-align: center; font-size: 2.8em; margin-top: 0; margin-bottom: 5px; letter-spacing: 3px; text-shadow: 0 0 20px rgba(243, 208, 108, 0.4); }
+.titulo-principal { font-size: clamp(2.4rem, 9vw, 3.5rem); letter-spacing: clamp(2px, 1.2vw, 6px); text-transform: uppercase; margin-bottom: 0; overflow-wrap: anywhere; }
+.subtitulo-principal { color: #bfaee3; font-size: clamp(1.05rem, 4vw, 1.4rem); margin-top: 10px; font-style: italic; }
+.titulo-seccion { color: #f3d06c; font-family: 'Playfair Display', serif; font-size: 2em; margin: 0 0 30px; text-align: center; text-shadow: 0 0 15px rgba(243, 208, 108, 0.5); }
+.texto-invitacion { color: #d1c4e9; font-size: 1.2em; margin-bottom: 40px; text-align: center; }
 p.subtitulo { text-align: center; font-size: 1.2em; color: #bfaee3; margin-top: 0; margin-bottom: 30px; }
 
 /* --- NUEVA LANDING PAGE: PUERTAS ANTIGUAS 3D --- */
@@ -89,6 +141,48 @@ p.subtitulo { text-align: center; font-size: 1.2em; color: #bfaee3; margin-top: 
 .links-footer span { cursor: pointer; transition: color 0.3s; }
 .links-footer span:hover { color: #f3d06c; text-decoration: underline; }
 
+.contenedor-nieve {
+    display: none;
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+#btnAudio.control-audio {
+    appearance: none;
+    -webkit-appearance: none;
+    display: none;
+    position: fixed;
+    right: 22px;
+    top: 22px;
+    z-index: 50;
+    min-width: 0;
+    width: auto;
+    padding: 10px 16px;
+    border: 1px solid rgba(243, 208, 108, 0.55);
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(35, 19, 59, 0.92), rgba(10, 5, 20, 0.92));
+    color: #f3d06c;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.45), 0 0 15px rgba(243, 208, 108, 0.12);
+    backdrop-filter: blur(8px);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
+}
+
+#btnAudio.control-audio:hover {
+    border-color: #f3d06c;
+    background: linear-gradient(135deg, rgba(50, 28, 83, 0.95), rgba(20, 9, 38, 0.95));
+    box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 20px rgba(243, 208, 108, 0.25);
+    transform: translateY(-1px);
+}
+
 /* --- ANIMACIÓN CENTRAL DE BIENVENIDA --- */
 .centro-mistico { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 30px 0 50px 0; }
 .carta-flotante-central { width: 160px; border-radius: 10px; border: 3px solid #f3d06c; box-shadow: 0 15px 35px rgba(0,0,0,0.8), 0 0 25px rgba(243, 208, 108, 0.5); animation: flotar 4s ease-in-out infinite; z-index: 2; }
@@ -116,19 +210,83 @@ button.btn-principal, button.btn-secundario { width: 100%; padding: 16px; font-s
 .btn-principal:hover { box-shadow: 0 0 20px rgba(243, 208, 108, 0.6); transform: translateY(-2px); }
 .btn-secundario { background: linear-gradient(135deg, #2b1845 0%, #150926 100%); color: #f3d06c; border: 1px solid #48237c; margin-top: 15px; flex: 1; }
 .btn-secundario:hover { box-shadow: 0 0 15px rgba(243, 208, 108, 0.3); border-color: #f3d06c; }
+.btn-separado { margin-top: 20px; }
+.grupo-botones { display: flex; gap: 15px; margin-top: 15px; width: 100%; }
+.grupo-botones .btn-secundario { margin-top: 0; }
+.grupo-botones-separado { margin-top: 20px; }
+.acciones-lectura { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+.acciones-lectura > .btn-secundario { margin-top: 0; }
 
 /* --- CARRUSEL E INTERFAZ DE TIRADAS --- */
-.contenedor-carrusel-padre { position: relative; display: flex; align-items: center; margin: 15px 0; }
-.carrusel-tiradas { display: flex; gap: 15px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; padding: 15px 5px; width: 100%; cursor: grab; }
-.carrusel-tiradas::-webkit-scrollbar { height: 6px; }
-.carrusel-tiradas::-webkit-scrollbar-track { background: rgba(10, 6, 20, 0.5); border-radius: 4px; }
-.carrusel-tiradas::-webkit-scrollbar-thumb { background: #48237c; border-radius: 4px; }
-.tarjeta-carrusel { flex: 0 0 240px; scroll-snap-align: center; background: linear-gradient(135deg, rgba(25, 13, 45, 0.95) 0%, rgba(10, 5, 20, 0.95) 100%); border: 1px solid #48237c; border-radius: 12px; padding: 20px 15px; color: #f3d06c; text-align: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.6); display: flex; flex-direction: column; justify-content: center; min-height: 130px; box-sizing: border-box; user-select: none; }
-.tarjeta-carrusel:hover { transform: translateY(-5px); border-color: #f3d06c; box-shadow: 0 10px 25px rgba(243, 208, 108, 0.3); }
-.tarjeta-carrusel strong { font-family: 'Playfair Display', serif; font-size: 1.15em; display: block; margin-bottom: 8px; color: #f3d06c; }
-.tarjeta-carrusel small { color: #bfaee3; font-size: 0.9em; line-height: 1.3; }
-.btn-flecha-carrusel { background: rgba(18, 12, 28, 0.9); border: 1px solid #c59b27; color: #f3d06c; font-size: 1.4em; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; flex-shrink: 0; }
-.btn-flecha-carrusel:hover { background: #c59b27; color: #120c1c; box-shadow: 0 0 10px rgba(243, 208, 108, 0.6); }
+.pantalla-recomendacion .titulo-seccion { margin-bottom: 22px; }
+.contenedor-carrusel-padre { position: relative; margin: 10px auto 0; width: min(100%, 820px); }
+.carrusel-tiradas {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scroll-padding-inline: 0;
+    padding: 18px 0 20px;
+    width: min(100% - 112px, 706px);
+    margin: 0 auto;
+    cursor: grab;
+    border: 1px solid rgba(123, 94, 167, 0.34);
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(13, 6, 24, 0.72), rgba(7, 3, 14, 0.5));
+    box-shadow: inset 0 0 26px rgba(0,0,0,0.48);
+}
+.carrusel-tiradas::-webkit-scrollbar { height: 4px; }
+.carrusel-tiradas::-webkit-scrollbar-track { background: rgba(10, 6, 20, 0.75); border-radius: 4px; }
+.carrusel-tiradas::-webkit-scrollbar-thumb { background: linear-gradient(90deg, #6b3ca3, #c59b27); border-radius: 4px; }
+.tarjeta-carrusel {
+    flex: 0 0 226px;
+    scroll-snap-align: center;
+    background: linear-gradient(145deg, rgba(30, 16, 52, 0.96), rgba(9, 4, 18, 0.98));
+    border: 1px solid rgba(123, 94, 167, 0.7);
+    border-radius: 8px;
+    padding: 18px 16px;
+    color: #f3d06c;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.45);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 118px;
+    user-select: none;
+}
+.tarjeta-carrusel:hover {
+    transform: translateY(-3px);
+    border-color: rgba(243, 208, 108, 0.9);
+    background: linear-gradient(145deg, rgba(42, 24, 70, 0.98), rgba(13, 6, 24, 0.98));
+    box-shadow: 0 14px 28px rgba(0,0,0,0.55), 0 0 18px rgba(243, 208, 108, 0.16);
+}
+.tarjeta-carrusel strong { font-family: 'Playfair Display', serif; font-size: 1.02em; display: block; margin-bottom: 8px; color: #f3d06c; line-height: 1.2; }
+.tarjeta-carrusel small { color: #c9bce3; font-size: 0.86em; line-height: 1.35; }
+.btn-flecha-carrusel {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(14, 7, 26, 0.92);
+    border: 1px solid rgba(197, 155, 39, 0.75);
+    color: #f3d06c;
+    font-size: 1.25em;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.55);
+}
+#btnFlechaIzq { left: 12px; }
+#btnFlechaDer { right: 12px; }
+.btn-flecha-carrusel:hover { background: #c59b27; color: #120c1c; box-shadow: 0 0 14px rgba(243, 208, 108, 0.45); }
 
 /* --- ABANICO DE SELECCIÓN --- */
 .mesa-seleccion-cartas { display: flex; justify-content: center; align-items: center; margin-top: 15px; margin-bottom: 15px; min-height: 240px; overflow-x: auto; padding: 15px 10px; background: rgba(10, 6, 20, 0.5); border-radius: 8px; border: 1px solid #48237c; }
@@ -142,18 +300,10 @@ button.btn-principal, button.btn-secundario { width: 100%; padding: 16px; font-s
 .cara-trasera { background-image: url('imagenes/reverso_cartas.jpg'); background-size: cover; background-position: center; transform: rotateY(0deg); }
 .cara-frontal { transform: rotateY(180deg); object-fit: cover; }
 
-.contenedor-cartas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 20px; margin-bottom: 20px; }
+.contenedor-cartas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 14px; margin-bottom: 18px; }
 .posicion-carta { width: 110px; height: 190px; position: relative; }
 .carta-animada { width: 100%; height: 100%; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.8); border: 2px solid #c59b27; opacity: 0; transform: translateY(20px); animation: aparecerCarta 0.6s ease-out forwards; object-fit: cover; background-color: #1a122a; }
-
-/* NUEVA CLASE PARA LA CAJA DE PROFUNDIZAR */
-.caja-profundizacion {
-    margin-top: 25px;
-    padding: 15px;
-    background-color: rgba(42, 28, 68, 0.8);
-    border-radius: 8px;
-    border: 1px solid #c59b27;
-}
+@keyframes aparecerCarta { 0% { opacity: 0; transform: translateY(20px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
 /* --- DISPOSICIONES GEOMÉTRICAS DE MESAS --- */
 .mesa-pasado-presente-futuro { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 18px; }
@@ -219,7 +369,7 @@ button.btn-principal, button.btn-secundario { width: 100%; padding: 16px; font-s
 .mesa-mapamundi .pos-12 { grid-area: 2 / 1 / 3 / 2; }
 
 /* --- DISPOSICIONES GEOMÉTRICAS DE MESAS (ESPECIALES DE RUNAS) --- */
-.mesa-runas-lineal { display: flex; justify-content: center; gap: 15px; margin: 20px 0; flex-wrap: wrap; }
+.mesa-runas-lineal { display: flex; justify-content: center; gap: 15px; margin: 16px 0 18px; flex-wrap: wrap; }
 .runa-ficha { background: linear-gradient(145deg, #2a2533, #15101f); border: 2px solid #c59b27; border-radius: 12px; padding: 10px; text-align: center; color: #f3d06c; width: 95px; height: 145px; box-sizing: border-box; box-shadow: 0 8px 20px rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
 .img-runa { width: 70px; height: 70px; object-fit: contain; margin-bottom: 8px; }
 .mesa-yggdrasil { display: grid; grid-template-columns: repeat(5, auto); grid-template-areas: ". runa3 . runa4 ." "runa5 . runa2 . runa6" ". . runa1 . ." ". runa7 . runa9 ." ". . runa8 . ."; gap: 15px; justify-content: center; align-items: center; margin: 20px auto; }
@@ -234,7 +384,36 @@ button.btn-principal, button.btn-secundario { width: 100%; padding: 16px; font-s
 .mesa-tirada-7-runas .img-runa { width: 60px; height: 60px; }
 .mesa-martillo-thor { display: grid; grid-template-areas: "runa1 runa2 runa3" ". runa4 ." ". runa5 ." ". runa6 ."; gap: 15px; justify-content: center; align-items: center; margin: 20px auto; }
 .mesa-martillo-thor .runa-ficha { justify-self: center; }
-#resultado { margin-top: 15px; padding: 20px; background-color: rgba(10, 6, 20, 0.9); border-left: 4px solid #c59b27; border-radius: 0 8px 8px 0; text-align: justify; line-height: 1.6; font-size: 1.15em; max-height: 70vh; overflow-y: auto; }
+#resultado {
+    margin-top: 0;
+    padding: 24px;
+    background: linear-gradient(180deg, rgba(12, 6, 22, 0.94), rgba(7, 3, 14, 0.9));
+    border: 1px solid rgba(197, 155, 39, 0.35);
+    border-left: 4px solid #c59b27;
+    border-radius: 8px;
+    text-align: left;
+    line-height: 1.62;
+    font-size: 1.08em;
+    overflow: visible;
+    box-shadow: 0 18px 34px rgba(0,0,0,0.45);
+}
+.titulo-consulta {
+    color: #f3d06c;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25em;
+    line-height: 1.25;
+    margin: 0 0 12px;
+    text-align: center;
+}
+.texto-lectura {
+    max-width: 760px;
+    margin: 14px auto 0;
+    color: #f2ebd9;
+}
+.texto-lectura strong {
+    display: inline-block;
+    margin-top: 8px;
+}
 
 /* --- TEMA VIKINGO (RUNAS) --- */
 body.bg-runas .contenedor-principal.modo-reino { background-color: rgba(10, 15, 25, 0.45); border-color: rgba(168, 194, 223, 0.4); box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(168, 194, 223, 0.15); }
@@ -252,13 +431,12 @@ body.bg-runas .carrusel-tiradas::-webkit-scrollbar-thumb { background: #4b6b8a !
 body.bg-runas .btn-flecha-carrusel { background: rgba(20, 30, 45, 0.9) !important; border-color: #4b6b8a !important; color: #a8c2df !important; }
 body.bg-runas .btn-flecha-carrusel:hover { background: #4b6b8a !important; color: #ffffff !important; }
 body.bg-runas .runa-ficha { background: linear-gradient(145deg, rgba(35, 50, 65, 0.7), rgba(15, 20, 30, 0.8)) !important; border-color: #637a91 !important; color: #a8c2df !important; }
-body.bg-runas #resultado { background-color: rgba(10, 15, 25, 0.5) !important; border-left-color: #a8c2df !important; }
+body.bg-runas #resultado { background: linear-gradient(180deg, rgba(10, 15, 25, 0.66), rgba(6, 10, 17, 0.72)) !important; border-color: rgba(168, 194, 223, 0.28) !important; border-left-color: #a8c2df !important; }
 body.bg-runas .mesa-seleccion-cartas { background: rgba(10, 15, 25, 0.4) !important; border-color: rgba(168, 194, 223, 0.4) !important; }
-body.bg-runas .control-audio { background-color: rgba(20, 30, 45, 0.9) !important; border-color: #a8c2df !important; color: #a8c2df !important; }
+body.bg-runas #btnAudio.control-audio { background: linear-gradient(135deg, rgba(20, 30, 45, 0.94), rgba(8, 13, 22, 0.94)) !important; border-color: #a8c2df !important; color: #d0e3f6 !important; }
 body.bg-runas .carta-flotante-central { border-color: #a8c2df !important; box-shadow: 0 15px 35px rgba(0,0,0,0.8), 0 0 25px rgba(168, 194, 223, 0.3) !important; }
 body.bg-runas .resplandor-base { background: radial-gradient(ellipse at center, rgba(168, 194, 223, 0.3) 0%, rgba(0,0,0,0) 70%) !important; }
 
-/* NUEVA CLASE PARA LA CAJA DE PROFUNDIZAR (Saca el color duro del JS) */
 .caja-profundizacion {
     margin-top: 25px;
     padding: 15px;
@@ -274,9 +452,14 @@ body.bg-runas .caja-profundizacion {
 
 /* --- REGLAS RESPONSIVE --- */
 @media (max-width: 600px) {
-    .contenedor-principal { padding: 20px 18px; max-height: 98vh; }
+    body { padding: 12px; align-items: flex-start; }
+    .contenedor-principal { padding: 20px 18px; max-height: 98vh; overflow-x: hidden; }
     .contenedor-principal.modo-reino { padding: 20px 18px; }
     h1 { font-size: 1.9em; }
+    .pantalla-portales { min-height: calc(100vh - 24px); justify-content: flex-start; gap: 20px; }
+    .hero-portales { margin-bottom: 0; width: 100%; }
+    .titulo-principal { font-size: clamp(2.1rem, 15vw, 3.1rem); letter-spacing: 2px; line-height: 1.05; }
+    .subtitulo-principal { font-size: 1.1rem; padding: 0 8px; }
     
     .contenedor-puertas-portal { flex-direction: column; gap: 30px; margin: 20px 0; }
     .marco-puerta { width: 140px; height: 230px; }
@@ -285,6 +468,22 @@ body.bg-runas .caja-profundizacion {
 
     .botonera-solapas { flex-direction: column; }
     .btn-solapa { border-radius: 10px; }
+    .grupo-botones { flex-direction: column; }
+    button.btn-principal, button.btn-secundario { font-size: 0.95em; letter-spacing: 1px; }
+    .footer-inicio { margin-top: 12px; font-size: 0.72em; padding: 0 8px; }
+    .links-footer { flex-direction: column; gap: 8px; }
+    #btnAudio.control-audio { top: auto; right: 14px; bottom: 14px; font-size: 0.72rem; padding: 9px 11px; }
+    #btnAudio.control-audio:hover { transform: translateY(-1px); }
+    .contenedor-carrusel-padre { width: 100%; }
+    .carrusel-tiradas { gap: 12px; width: calc(100% - 84px); padding: 14px 0 16px; scroll-padding-inline: 0; }
+    .tarjeta-carrusel { flex-basis: 100%; min-height: 112px; padding: 16px 14px; }
+    .btn-flecha-carrusel { width: 34px; height: 34px; }
+    #btnFlechaIzq { left: 8px; }
+    #btnFlechaDer { right: 8px; }
+    .contenedor-principal.modo-reino:has(#pantalla-lectura[style*="flex"]) { max-height: none; }
+    #resultado { font-size: 1.02em; text-align: left; padding: 18px; }
+    .titulo-consulta { font-size: 1.1em; }
+    .posicion-carta { width: 92px; height: 160px; }
     
     .mesa-tirada-7-runas { grid-template-columns: auto auto 2px auto auto 2px auto auto; gap: 10px 2px; overflow-x: auto; padding-bottom: 10px; }
     .mesa-tirada-7-runas .runa-ficha { width: 55px; height: 105px; padding: 4px; }
