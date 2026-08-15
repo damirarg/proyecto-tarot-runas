@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oráculos: Tarot y Runas</title>
-    <link rel="stylesheet" href="styles.css?v=20260815-3">
+    <link rel="stylesheet" href="styles.css?v=20260815-5">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body class="bg-general">
@@ -24,38 +24,53 @@
         <!-- PANTALLA 1: LANDING PAGE MÍSTICA -->
         <div id="pantalla-portales" class="pantalla pantalla-portales">
             
-            <!-- Orbes decorativos de fondo -->
-            <div class="orbe-mistico orbe-izq"></div>
-            <div class="orbe-mistico orbe-der"></div>
+            <header class="landing-nav">
+                <div class="marca-oraculos">
+                    <span class="marca-simbolo">✦</span>
+                    <span>Oráculos</span>
+                </div>
+                <nav class="landing-links" aria-label="Secciones del oráculo">
+                    <span>Tarot</span>
+                    <span>Runas</span>
+                    <span>Lecturas IA</span>
+                </nav>
+            </header>
 
-            <div class="hero-portales">
-                <h1 class="titulo-principal">Oráculos</h1>
-                <p class="subtitulo-principal">Atraviesa el umbral hacia tu destino</p>
-            </div>
-
-            <!-- ESTRUCTURA NUEVA: PUERTAS ANTIGUAS -->
-            <div class="contenedor-puertas-portal">
-                
-                <!-- Puerta Tarot -->
-                <div class="puerta-interactiva" id="btnPortalTarot">
-                    <h2 class="titulo-puerta">Oráculo<br>del Tarot</h2>
-                    <div class="marco-puerta">
-                        <div class="interior-puerta">✨</div>
-                        <div class="hoja-puerta hoja-izq"></div>
-                        <div class="hoja-puerta hoja-der"></div>
+            <section class="landing-hero">
+                <div class="hero-copy">
+                    <p class="hero-eyebrow">Tarot y sabiduría rúnica online</p>
+                    <h1 class="titulo-principal">Elegí tu oráculo</h1>
+                    <p class="subtitulo-principal">Concentrate en tu pregunta, cruzá el umbral y recibí una lectura simbólica para reflexionar con claridad.</p>
+                    <div class="hero-confianza">
+                        <span>78 cartas Rider-Waite</span>
+                        <span>24 runas Futhark</span>
+                        <span>Lecturas personalizadas</span>
                     </div>
                 </div>
 
-                <!-- Puerta Runas -->
-                <div class="puerta-interactiva" id="btnPortalRunas">
-                    <h2 class="titulo-puerta">Sabiduría<br>Nórdica</h2>
-                    <div class="marco-puerta">
-                        <div class="interior-puerta">ᛟ</div>
-                        <div class="hoja-puerta hoja-izq"></div>
-                        <div class="hoja-puerta hoja-der"></div>
-                    </div>
+                <div class="hero-visual" aria-hidden="true">
+                    <div class="halo-cartas"></div>
+                    <img class="carta-hero carta-hero-izq" src="imagenes/RWS_Tarot_02_High_Priestess.jpg" alt="">
+                    <img class="carta-hero carta-hero-centro" src="imagenes/RWS_Tarot_00_Fool.jpg" alt="">
+                    <img class="carta-hero carta-hero-der" src="imagenes/RWS_Tarot_17_Star.jpg" alt="">
+                    <img class="runa-hero" src="runas_imagenes/algiz.png" alt="">
                 </div>
+            </section>
 
+            <div class="selector-oraculos">
+                <button class="portal-card portal-tarot" id="btnPortalTarot">
+                    <span class="portal-etiqueta">Oráculo del Tarot</span>
+                    <span class="portal-titulo">Tirada con cartas</span>
+                    <span class="portal-texto">Explorá vínculos, decisiones, trabajo o energía del día con arcanos del Rider-Waite.</span>
+                    <span class="portal-accion">Entrar al Tarot</span>
+                </button>
+
+                <button class="portal-card portal-runas" id="btnPortalRunas">
+                    <span class="portal-etiqueta">Sabiduría nórdica</span>
+                    <span class="portal-titulo">Consulta con runas</span>
+                    <span class="portal-texto">Recibí una guía simbólica desde el Futhark antiguo para mirar tu situación desde otro ángulo.</span>
+                    <span class="portal-accion">Entrar a Runas</span>
+                </button>
             </div>
 
             <!-- Footer Legal y Enlaces -->

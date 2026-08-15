@@ -93,6 +93,12 @@ const pantallaRecomendacion = document.getElementById('pantalla-recomendacion');
 const pantallaLectura = document.getElementById('pantalla-lectura');
 const contenedorPrincipal = document.getElementById('contenedor-principal');
 
+function activarModoLectura(activo) {
+    if (!contenedorPrincipal) return;
+    contenedorPrincipal.classList.toggle('modo-lectura', activo);
+    document.body.classList.toggle('modo-lectura', activo);
+}
+
 document.getElementById('btnPortalTarot')?.addEventListener('click', function() {
     this.classList.add('abierta');
     
@@ -158,6 +164,7 @@ document.querySelectorAll('.btn-salir-reino').forEach(btn => {
     btn.addEventListener('click', () => {
         document.body.className = 'bg-general'; 
         if (contenedorPrincipal) contenedorPrincipal.classList.remove('modo-reino');
+        activarModoLectura(false);
         detenerNieve();
         detenerTodoElAudio();
         
@@ -180,6 +187,7 @@ document.querySelectorAll('.btn-volver-menu').forEach(btn => {
         if (pantallaTiradas) pantallaTiradas.style.display = "none";
         if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
         if (pantallaLectura) pantallaLectura.style.display = "none";
+        activarModoLectura(false);
         
         const inputPregunta = document.getElementById('preguntaUsuario');
         if (inputPregunta) inputPregunta.value = "";
@@ -200,6 +208,7 @@ botonesOtraConsulta.forEach(btn => {
         if (pantallaTiradas) pantallaTiradas.style.display = "flex";
         if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
         if (pantallaLectura) pantallaLectura.style.display = "none";
+        activarModoLectura(false);
         
         const inputPregunta = document.getElementById('preguntaUsuario');
         if (inputPregunta) inputPregunta.value = "";
@@ -278,6 +287,7 @@ function ejecutarTiradaElegida(idTirada) {
 document.getElementById('btnRitualDia')?.addEventListener('click', () => {
     if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
     if (pantallaLectura) pantallaLectura.style.display = "flex";
+    activarModoLectura(true);
 
     const divResultado = document.getElementById('resultado');
     if (!divResultado) return;
@@ -356,7 +366,14 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
             }
             const datos = await respuesta.json();
 
-            divResultado.innerHTML = `<strong>✨ Tu Carta del Día: ${cartaElegida} ✨</strong><div class="contenedor-cartas"><div class="posicion-carta"><img src="imagenes/${archivoRider}" class="carta-animada"></div></div><div style="margin-top: 15px;">${formatearTextoMarkdown(datos.lectura)}</div>`;
+            divResultado.innerHTML = `
+                <h3 class="titulo-consulta">Tu Carta del Día: ${cartaElegida}</h3>
+                <div class="lectura-layout lectura-simple">
+                    <div class="zona-oraculo">
+                        <div class="contenedor-cartas"><div class="posicion-carta"><img src="imagenes/${archivoRider}" class="carta-animada" alt="${cartaElegida}"></div></div>
+                    </div>
+                    <div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>
+                </div>`;
             crearBotonProfundizar(divResultado);
 
         } catch (error) {
@@ -374,6 +391,7 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
 
     if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
     if (pantallaLectura) pantallaLectura.style.display = "flex";
+    activarModoLectura(true);
 
     if (!divResultado) return;
     divResultado.innerHTML = "<p><strong style='color: #f3d06c;'>Barajando el mazo y canalizando la energía... 🔮</strong></p>";
@@ -408,9 +426,9 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
         
         const datos = await respuesta.json();
         
-        divResultado.innerHTML = `<h3 class="titulo-consulta">Tu Pregunta: ${pregunta}</h3><div class="${claseMesa}">` + 
+        divResultado.innerHTML = `<h3 class="titulo-consulta">Tu Pregunta: ${pregunta}</h3><div class="lectura-layout"><div class="zona-oraculo"><div class="${claseMesa}">` + 
             cartasSeleccionadas.map((carta, index) => `<div class="posicion-carta pos-${index + 1}"><img src="imagenes/${imagenesRiderWaite[carta]}" class="carta-animada" style="animation-delay: ${index * 0.2}s" alt="${carta}"></div>`).join('') +
-            `</div><div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>`;
+            `</div></div><div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div></div>`;
         
         crearBotonProfundizar(divResultado);
     } catch (error) { 
@@ -426,6 +444,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
 
     if (pantallaRecomendacion) pantallaRecomendacion.style.display = "none";
     if (pantallaLectura) pantallaLectura.style.display = "flex";
+    activarModoLectura(true);
 
     if (!divResultado) return;
     divResultado.innerHTML = "<p><strong style='color: #f3d06c;'>Tallando y arrojando las runas sagradas... ᛟ</strong></p>";
@@ -458,7 +477,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         
         const datos = await respuesta.json();
         
-        let HTMLRunas = `<h3 class="titulo-consulta">Tu Consulta Rúnica: ${pregunta}</h3><div class="${claseMesaRunas}">`;
+        let HTMLRunas = `<h3 class="titulo-consulta">Tu Consulta Rúnica: ${pregunta}</h3><div class="lectura-layout"><div class="zona-oraculo"><div class="${claseMesaRunas}">`;
         
         runasSeleccionadas.forEach((runa, index) => {
             let gridArea = (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") ? `grid-area: runa${index + 1};` : "";
@@ -472,7 +491,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
                     </strong>
                 </div>`;
         });
-        HTMLRunas += `</div><div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>`;
+        HTMLRunas += `</div></div><div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div></div>`;
         
         divResultado.innerHTML = HTMLRunas;
         crearBotonProfundizar(divResultado);
