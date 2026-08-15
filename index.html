@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oráculos: Tarot y Runas</title>
-    <link rel="stylesheet" href="styles.css?v=20260815-5">
+    <link rel="stylesheet" href="styles.css?v=20260815-7">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body class="bg-general">
@@ -78,9 +78,9 @@
                 <p>Esta plataforma es solo para fines de entretenimiento y autorreflexión. Debes tener 18 años o más.</p>
                 <p>No ofrecemos asesoramiento médico, jurídico o financiero. Consulta a un profesional cualificado para asuntos importantes.</p>
                 <div class="links-footer">
-                    <span>Cómo funciona</span>
-                    <span>Preguntas frecuentes y Ayuda</span>
-                    <span>Contáctanos</span>
+                    <button type="button" data-info-modal="como-funciona">Cómo funciona</button>
+                    <button type="button" data-info-modal="ayuda">Preguntas frecuentes y Ayuda</button>
+                    <button type="button" data-info-modal="contacto">Contáctanos</button>
                 </div>
             </footer>
         </div>
@@ -146,6 +146,16 @@
             </div>
         </div>
 
+    </div>
+
+    <div id="modalInformativo" class="modal-informativo" aria-hidden="true">
+        <div class="modal-backdrop" data-cerrar-modal></div>
+        <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+            <button type="button" class="modal-cerrar" data-cerrar-modal aria-label="Cerrar">×</button>
+            <p id="modalEtiqueta" class="modal-etiqueta"></p>
+            <h2 id="modalTitulo"></h2>
+            <div id="modalContenido" class="modal-contenido"></div>
+        </section>
     </div>
 
     <script type="module" src="app.js"></script>

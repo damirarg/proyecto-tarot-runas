@@ -92,12 +92,124 @@ const pantallaTiradas = document.getElementById('pantalla-tiradas');
 const pantallaRecomendacion = document.getElementById('pantalla-recomendacion');
 const pantallaLectura = document.getElementById('pantalla-lectura');
 const contenedorPrincipal = document.getElementById('contenedor-principal');
+const modalInformativo = document.getElementById('modalInformativo');
+const modalEtiqueta = document.getElementById('modalEtiqueta');
+const modalTitulo = document.getElementById('modalTitulo');
+const modalContenido = document.getElementById('modalContenido');
+
+const contenidosInformativos = {
+    "como-funciona": {
+        etiqueta: "Guía rápida",
+        titulo: "Cómo funciona",
+        contenido: `
+            <div class="modal-grid">
+                <article>
+                    <span class="paso-modal">1</span>
+                    <h3>Elegí tu oráculo</h3>
+                    <p>Podés consultar el Tarot Rider-Waite o las runas del Futhark antiguo. Cada camino tiene su propia energía, música y estilo de lectura.</p>
+                </article>
+                <article>
+                    <span class="paso-modal">2</span>
+                    <h3>Escribí tu inquietud</h3>
+                    <p>Formulá una pregunta clara. No hace falta que sea perfecta: alcanza con que represente aquello que querés mirar con más atención.</p>
+                </article>
+                <article>
+                    <span class="paso-modal">3</span>
+                    <h3>Seleccioná una tirada</h3>
+                    <p>La app baraja cartas o runas al azar y usa el método elegido para ordenar la interpretación según posiciones simbólicas.</p>
+                </article>
+                <article>
+                    <span class="paso-modal">4</span>
+                    <h3>Recibí una lectura</h3>
+                    <p>La interpretación se genera con IA a partir de tu pregunta, los símbolos extraídos y la estructura de la tirada.</p>
+                </article>
+            </div>
+        `
+    },
+    ayuda: {
+        etiqueta: "Soporte",
+        titulo: "Preguntas frecuentes y ayuda",
+        contenido: `
+            <div class="faq-lista">
+                <details open>
+                    <summary>¿Las lecturas predicen el futuro?</summary>
+                    <p>No. Están pensadas para entretenimiento, introspección y reflexión simbólica. No reemplazan decisiones personales ni asesoramiento profesional.</p>
+                </details>
+                <details>
+                    <summary>¿Qué tipo de preguntas conviene hacer?</summary>
+                    <p>Funcionan mejor las preguntas abiertas: "Qué debería tener en cuenta", "Cómo puedo abordar esta situación" o "Qué energía rodea este vínculo".</p>
+                </details>
+                <details>
+                    <summary>¿Puedo consultar sobre salud, dinero o temas legales?</summary>
+                    <p>Podés reflexionar sobre cómo te sentís frente a esos temas, pero la app no brinda consejos médicos, financieros ni jurídicos. Para asuntos importantes, consultá a una persona profesional calificada.</p>
+                </details>
+                <details>
+                    <summary>¿Por qué a veces tarda en responder?</summary>
+                    <p>La lectura depende de un servicio de IA. Si el servidor está despertando o hay mucha carga, puede demorar unos segundos más.</p>
+                </details>
+                <details>
+                    <summary>¿Qué hago si aparece un error?</summary>
+                    <p>Probá recargar la página y repetir la consulta. Si el problema sigue, puede haber una interrupción temporal del servicio de IA.</p>
+                </details>
+            </div>
+        `
+    },
+    contacto: {
+        etiqueta: "Contacto",
+        titulo: "Contáctanos",
+        contenido: `
+            <div class="contacto-modal">
+                <p>Si querés reportar un error, sugerir una tirada o compartir una mejora para la experiencia, podés escribirnos con el mayor detalle posible.</p>
+                <div class="contacto-card">
+                    <strong>Información útil para incluir</strong>
+                    <ul>
+                        <li>Qué estabas intentando hacer.</li>
+                        <li>Si estabas en Tarot o Runas.</li>
+                        <li>Qué tirada elegiste.</li>
+                        <li>Una captura o descripción del error, si corresponde.</li>
+                    </ul>
+                </div>
+                <p class="nota-contacto">Por ahora esta sección no envía mensajes desde la app. En la próxima etapa podemos conectarla a email, WhatsApp o un formulario real.</p>
+            </div>
+        `
+    }
+};
 
 function activarModoLectura(activo) {
     if (!contenedorPrincipal) return;
     contenedorPrincipal.classList.toggle('modo-lectura', activo);
     document.body.classList.toggle('modo-lectura', activo);
 }
+
+function abrirModalInformativo(tipo) {
+    const info = contenidosInformativos[tipo];
+    if (!info || !modalInformativo || !modalEtiqueta || !modalTitulo || !modalContenido) return;
+    modalEtiqueta.textContent = info.etiqueta;
+    modalTitulo.textContent = info.titulo;
+    modalContenido.innerHTML = info.contenido;
+    modalInformativo.classList.add('visible');
+    modalInformativo.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-abierto');
+}
+
+function cerrarModalInformativo() {
+    if (!modalInformativo) return;
+    modalInformativo.classList.remove('visible');
+    modalInformativo.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-abierto');
+}
+
+document.querySelectorAll('[data-info-modal]').forEach(btn => {
+    btn.addEventListener('click', () => abrirModalInformativo(btn.dataset.infoModal));
+});
+
+document.querySelectorAll('[data-cerrar-modal]').forEach(btn => {
+    btn.addEventListener('click', cerrarModalInformativo);
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') cerrarModalInformativo();
+});
 
 document.getElementById('btnPortalTarot')?.addEventListener('click', function() {
     this.classList.add('abierta');
@@ -477,7 +589,20 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         
         const datos = await respuesta.json();
         
-        let HTMLRunas = `<h3 class="titulo-consulta">Tu Consulta Rúnica: ${pregunta}</h3><div class="lectura-layout"><div class="zona-oraculo"><div class="${claseMesaRunas}">`;
+        const tiradaElegida = catalogoTiradasRunas.find(tirada => tirada.id === idTirada);
+        const nombreTirada = tiradaElegida ? tiradaElegida.nombre : `Tirada de ${cantidadRunas} runas`;
+        const listaRunas = runasSeleccionadas.map(runa => runa.nombre).join(', ');
+
+        let HTMLRunas = `
+            <h3 class="titulo-consulta">Tu Consulta Rúnica</h3>
+            <div class="lectura-resumen lectura-resumen-runas">
+                <span><strong>Pregunta</strong>${pregunta}</span>
+                <span><strong>Método</strong>${nombreTirada}</span>
+                <span><strong>Runas</strong>${listaRunas}</span>
+            </div>
+            <div class="lectura-layout lectura-runas">
+                <div class="zona-oraculo zona-oraculo-runas">
+                    <div class="${claseMesaRunas}">`;
         
         runasSeleccionadas.forEach((runa, index) => {
             let gridArea = (idTirada === "cruz_runica" || idTirada === "cruz_celta" || idTirada === "martillo_thor" || idTirada === "yggdrasil" || idTirada === "tirada_7") ? `grid-area: runa${index + 1};` : "";
@@ -491,7 +616,11 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
                     </strong>
                 </div>`;
         });
-        HTMLRunas += `</div></div><div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div></div>`;
+        HTMLRunas += `
+                    </div>
+                </div>
+                <div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>
+            </div>`;
         
         divResultado.innerHTML = HTMLRunas;
         crearBotonProfundizar(divResultado);

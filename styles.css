@@ -360,9 +360,186 @@ p.subtitulo { text-align: center; font-size: 1.2em; color: #bfaee3; margin-top: 
 /* Footer */
 .footer-inicio { margin-top: 6px; text-align: center; font-family: sans-serif; font-size: 0.78em; color: #8a7a9e; max-width: 920px; }
 .footer-inicio p { margin: 5px 0; }
-.links-footer { margin-top: 15px; display: flex; justify-content: center; gap: 20px; }
-.links-footer span { cursor: pointer; transition: color 0.3s; }
-.links-footer span:hover { color: #f3d06c; text-decoration: underline; }
+.links-footer { margin-top: 15px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.links-footer button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: #bfaee3;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.3s;
+}
+.links-footer button:hover { color: #f3d06c; text-decoration: underline; }
+
+.modal-abierto {
+    overflow: hidden;
+}
+
+.modal-informativo {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+}
+
+.modal-informativo.visible {
+    display: flex;
+}
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 2, 9, 0.72);
+    backdrop-filter: blur(8px);
+}
+
+.modal-panel {
+    position: relative;
+    width: min(100%, 760px);
+    max-height: min(84vh, 760px);
+    overflow-y: auto;
+    padding: clamp(24px, 4vw, 38px);
+    border: 1px solid rgba(197, 155, 39, 0.42);
+    border-radius: 8px;
+    background:
+        radial-gradient(circle at top right, rgba(243, 208, 108, 0.12), transparent 34%),
+        linear-gradient(180deg, rgba(18, 9, 36, 0.98), rgba(7, 3, 14, 0.98));
+    color: #f2ebd9;
+    box-shadow: 0 28px 70px rgba(0,0,0,0.68);
+}
+
+.modal-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-panel::-webkit-scrollbar-track {
+    background: rgba(10, 5, 20, 0.7);
+}
+
+.modal-panel::-webkit-scrollbar-thumb {
+    background: rgba(197, 155, 39, 0.5);
+    border-radius: 999px;
+}
+
+.modal-cerrar {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(243, 208, 108, 0.36);
+    border-radius: 50%;
+    background: rgba(10, 5, 20, 0.72);
+    color: #f3d06c;
+    font-size: 1.45rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.modal-etiqueta {
+    margin: 0 0 8px;
+    color: #c59b27;
+    font-family: sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.modal-panel h2 {
+    margin: 0 42px 22px 0;
+    color: #f3d06c;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.1rem);
+    line-height: 1;
+}
+
+.modal-contenido {
+    color: #d8cbed;
+    font-size: 1.04rem;
+    line-height: 1.5;
+}
+
+.modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.modal-grid article,
+.contacto-card {
+    border: 1px solid rgba(123, 94, 167, 0.38);
+    border-radius: 8px;
+    padding: 16px;
+    background: rgba(10, 5, 20, 0.58);
+}
+
+.paso-modal {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(197, 155, 39, 0.18);
+    color: #f3d06c;
+    font-family: sans-serif;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.modal-contenido h3 {
+    margin: 0 0 8px;
+    color: #f3d06c;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+}
+
+.modal-contenido p {
+    margin: 0;
+}
+
+.faq-lista {
+    display: grid;
+    gap: 10px;
+}
+
+.faq-lista details {
+    border: 1px solid rgba(123, 94, 167, 0.38);
+    border-radius: 8px;
+    background: rgba(10, 5, 20, 0.58);
+    padding: 14px 16px;
+}
+
+.faq-lista summary {
+    color: #f3d06c;
+    cursor: pointer;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+}
+
+.faq-lista details p {
+    margin-top: 10px;
+}
+
+.contacto-modal {
+    display: grid;
+    gap: 16px;
+}
+
+.contacto-card ul {
+    margin: 10px 0 0;
+    padding-left: 18px;
+}
+
+.nota-contacto {
+    color: #bfaee3;
+    font-style: italic;
+}
 
 .contenedor-nieve {
     display: none;
@@ -602,8 +779,21 @@ button.btn-principal, button.btn-secundario { width: 100%; padding: 16px; font-s
 .mesa-cruz-celta-runas { display: grid; grid-template-areas: ". runa6 ." ". runa5 ." "runa1 runa2 runa3" ". runa4 ."; gap: 15px; justify-content: center; align-items: center; margin: 20px auto; }
 .mesa-cruz-celta-runas .runa-ficha { justify-self: center; }
 .mesa-tirada-5-runas { display: flex; flex-direction: column-reverse; align-items: center; gap: 10px; }
-.mesa-tirada-7-runas { display: grid; grid-template-columns: auto auto 20px auto auto 20px auto auto; grid-template-areas: "runa1 runa2 . runa3 runa4 . runa5 runa6" ". . . runa7 runa7 . . ."; gap: 15px 8px; justify-content: center; align-items: center; margin: 20px auto; width: 100%; max-width: 800px; }
-.mesa-tirada-7-runas .runa-ficha { width: 85px; height: 140px; justify-self: center; }
+.mesa-tirada-7-runas {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(82px, 96px));
+    grid-template-areas:
+        "runa1 runa2 runa3 runa4"
+        ". runa5 runa6 ."
+        ". runa7 runa7 .";
+    gap: 14px;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 520px;
+}
+.mesa-tirada-7-runas .runa-ficha { width: 92px; height: 132px; justify-self: center; }
 .mesa-tirada-7-runas .img-runa { width: 60px; height: 60px; }
 .mesa-martillo-thor { display: grid; grid-template-areas: "runa1 runa2 runa3" ". runa4 ." ". runa5 ." ". runa6 ."; gap: 15px; justify-content: center; align-items: center; margin: 20px auto; }
 .mesa-martillo-thor .runa-ficha { justify-self: center; }
@@ -628,6 +818,30 @@ button.btn-principal, button.btn-secundario { width: 100%; padding: 16px; font-s
     margin: 0 0 24px;
     text-align: center;
 }
+.lectura-resumen {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 0 24px;
+}
+.lectura-resumen span {
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid rgba(123, 94, 167, 0.36);
+    border-radius: 8px;
+    background: rgba(10, 6, 20, 0.46);
+    color: #f2ebd9;
+    line-height: 1.35;
+}
+.lectura-resumen strong {
+    display: block;
+    margin: 0 0 5px;
+    font-family: sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.78;
+}
 .lectura-layout {
     display: grid;
     grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
@@ -636,6 +850,10 @@ button.btn-principal, button.btn-secundario { width: 100%; padding: 16px; font-s
 }
 .lectura-layout.lectura-simple {
     grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+}
+.lectura-layout.lectura-runas {
+    grid-template-columns: 1fr;
+    gap: 28px;
 }
 .zona-oraculo {
     position: sticky;
@@ -646,6 +864,13 @@ button.btn-principal, button.btn-secundario { width: 100%; padding: 16px; font-s
     border-radius: 8px;
     background: radial-gradient(circle at center, rgba(72, 35, 124, 0.3), rgba(8, 3, 16, 0.76));
     box-shadow: inset 0 0 22px rgba(0,0,0,0.42), 0 14px 28px rgba(0,0,0,0.32);
+}
+.zona-oraculo-runas {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    padding: clamp(16px, 2.5vw, 24px);
 }
 .zona-oraculo .contenedor-cartas,
 .zona-oraculo .mesa-runas-lineal,
@@ -661,6 +886,14 @@ button.btn-principal, button.btn-secundario { width: 100%; padding: 16px; font-s
     max-width: 760px;
     margin: 0 auto;
     color: #f2ebd9;
+}
+.lectura-runas .texto-lectura {
+    width: min(100%, 860px);
+    max-width: 860px;
+    padding: 26px;
+    border: 1px solid rgba(168, 194, 223, 0.18);
+    border-radius: 8px;
+    background: rgba(4, 8, 14, 0.34);
 }
 .texto-lectura strong {
     display: inline-block;
@@ -709,6 +942,7 @@ body.bg-runas .carrusel-tiradas::-webkit-scrollbar-thumb { background: #4b6b8a !
 body.bg-runas .btn-flecha-carrusel { background: rgba(20, 30, 45, 0.9) !important; border-color: #4b6b8a !important; color: #a8c2df !important; }
 body.bg-runas .btn-flecha-carrusel:hover { background: #4b6b8a !important; color: #ffffff !important; }
 body.bg-runas .runa-ficha { background: linear-gradient(145deg, rgba(35, 50, 65, 0.7), rgba(15, 20, 30, 0.8)) !important; border-color: #637a91 !important; color: #a8c2df !important; }
+body.bg-runas .lectura-resumen span { background: rgba(8, 14, 24, 0.56); border-color: rgba(168, 194, 223, 0.22); }
 body.bg-runas #resultado { background: linear-gradient(180deg, rgba(10, 15, 25, 0.66), rgba(6, 10, 17, 0.72)) !important; border-color: rgba(168, 194, 223, 0.28) !important; border-left-color: #a8c2df !important; }
 body.bg-runas .mesa-seleccion-cartas { background: rgba(10, 15, 25, 0.4) !important; border-color: rgba(168, 194, 223, 0.4) !important; }
 body.bg-runas #btnAudio.control-audio { background: linear-gradient(135deg, rgba(20, 30, 45, 0.94), rgba(8, 13, 22, 0.94)) !important; border-color: #a8c2df !important; color: #d0e3f6 !important; }
@@ -755,6 +989,9 @@ body.bg-runas .caja-profundizacion {
     .contenedor-principal.modo-reino.modo-lectura {
         max-width: 100%;
         padding: 24px;
+    }
+    .lectura-resumen {
+        grid-template-columns: 1fr;
     }
     .lectura-layout,
     .lectura-layout.lectura-simple {
@@ -809,6 +1046,11 @@ body.bg-runas .caja-profundizacion {
     button.btn-principal, button.btn-secundario { font-size: 0.95em; letter-spacing: 1px; }
     .footer-inicio { margin-top: 12px; font-size: 0.72em; padding: 0 8px; }
     .links-footer { flex-direction: column; gap: 8px; }
+    .modal-informativo { padding: 12px; align-items: flex-end; }
+    .modal-panel { width: 100%; max-height: 88vh; padding: 22px 18px; }
+    .modal-grid { grid-template-columns: 1fr; }
+    .modal-panel h2 { margin-right: 38px; }
+    .modal-contenido { font-size: 0.98rem; }
     #btnAudio.control-audio { top: auto; right: 14px; bottom: 14px; font-size: 0.72rem; padding: 9px 11px; }
     #btnAudio.control-audio:hover { transform: translateY(-1px); }
     body.modo-lectura #btnAudio.control-audio { top: 14px; bottom: auto; }
@@ -821,13 +1063,16 @@ body.bg-runas .caja-profundizacion {
     .contenedor-principal.modo-reino.modo-lectura { max-height: none; padding: 54px 14px 14px; }
     #resultado { font-size: 1.02em; text-align: left; padding: 18px; }
     .titulo-consulta { font-size: 1.1em; }
+    .lectura-resumen { gap: 8px; margin-bottom: 18px; }
+    .lectura-resumen span { padding: 11px 12px; }
     .lectura-layout { gap: 18px; }
     .zona-oraculo { padding: 12px; }
+    .lectura-runas .texto-lectura { padding: 16px; }
     .posicion-carta { width: 96px; height: 166px; }
     
-    .mesa-tirada-7-runas { grid-template-columns: auto auto 2px auto auto 2px auto auto; gap: 10px 2px; overflow-x: auto; padding-bottom: 10px; }
-    .mesa-tirada-7-runas .runa-ficha { width: 55px; height: 105px; padding: 4px; }
-    .mesa-tirada-7-runas .img-runa { width: 35px; height: 35px; }
-    .mesa-tirada-7-runas strong { font-size: 0.7em; }
+    .mesa-tirada-7-runas { grid-template-columns: repeat(4, minmax(58px, 1fr)); gap: 8px; max-width: 100%; overflow: visible; padding-bottom: 0; }
+    .mesa-tirada-7-runas .runa-ficha { width: 100%; max-width: 68px; height: 96px; padding: 5px; }
+    .mesa-tirada-7-runas .img-runa { width: 38px; height: 38px; }
+    .mesa-tirada-7-runas strong { font-size: 0.68em; }
     .mesa-yggdrasil { max-width: 100%; overflow-x: auto; }
 }
