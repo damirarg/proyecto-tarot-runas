@@ -8,6 +8,8 @@ let intervaloNieve = null;
 const nombresRunas = mazoRunas.map(runa => runa.nombre).join('|');
 const regexArticuloRuna = new RegExp(`\\b(el|la)\\s+(${nombresRunas})\\b`, 'gi');
 const regexContraccionRuna = new RegExp(`\\b(del|de la|al|a la)\\s+(${nombresRunas})\\b`, 'gi');
+const regexSotaMasculina = /\b(El|el)\s+(Sota de (?:Bastos|Copas|Espadas|Oros))\b/g;
+const regexContraccionSota = /\b(Del|del|Al|al)\s+(Sota de (?:Bastos|Copas|Espadas|Oros))\b/g;
 
 function normalizarArticulosRunas(texto) {
     return texto
@@ -18,10 +20,21 @@ function normalizarArticulosRunas(texto) {
         .replace(regexArticuloRuna, (_, __, runa) => runa);
 }
 
+function normalizarArticulosTarot(texto) {
+    return texto
+        .replace(regexContraccionSota, (_, articulo, carta) => {
+            const base = articulo.toLowerCase().startsWith('a') ? 'A la' : 'De la';
+            return `${base} ${carta}`;
+        })
+        .replace(regexSotaMasculina, (_, articulo, carta) => {
+            return `${articulo === 'El' ? 'La' : 'la'} ${carta}`;
+        });
+}
+
 // --- FUNCIÓN PARA CONVERTIR MARKDOWN EN HTML DORADO ---
 function formatearTextoMarkdown(texto) {
     if (!texto) return "";
-    const textoLimpio = normalizarArticulosRunas(texto)
+    const textoLimpio = normalizarArticulosTarot(normalizarArticulosRunas(texto))
         .replace(/^\s{0,3}#{1,4}\s+(.+)$/gm, '### $1')
         .replace(/^\s*[-*]\s+/gm, '')
         .replace(/\n{3,}/g, '\n\n');
@@ -456,9 +469,7 @@ document.getElementById('btnRitualDia')?.addEventListener('click', () => {
             cartaContenedor.style.width = '70px';
             cartaContenedor.innerHTML = `<div class="carta-flipper"><div class="cara-trasera" style="background-image: none; background-color: #1a122a; border-radius: 12px; border: 2px solid #c59b27;"></div><img class="cara-frontal" src="runas_imagenes/${runaSecreta.id}.png" alt="${runaSecreta.nombre}" style="border-radius: 12px; border: 2px solid #c59b27; background-color: #1a122a; object-fit: contain; padding: 5px;"></div>`;
 
-            cartaContenedor.addEventListener('click', () => {
-                realizarConsultaRunas(1, "runa_odin");
-            });
+            cartaContenedor.addEventListener('click', () => elegirRunaInteractiva(cartaContenedor, runaSecreta));
             mesaAbanico.appendChild(cartaContenedor);
         });
     }
@@ -486,7 +497,7 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
             const respuesta = await fetch('/api/consultar-tarot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pregunta: "Carta del Día", cartas: [cartaElegida], idTirada: "1", cantidadCartas: 1 })
+                body: JSON.stringify({ pregunta: "Carta del Día", cartas: [cartaElegida], idTirada: "carta_dia", cantidadCartas: 1 })
             });
 
             if (!respuesta.ok) {
@@ -500,6 +511,55 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
                 <div class="lectura-layout lectura-simple">
                     <div class="zona-oraculo">
                         <div class="contenedor-cartas"><div class="posicion-carta"><img src="imagenes/${archivoRider}" class="carta-animada" alt="${cartaElegida}"></div></div>
+                    </div>
+                    <div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>
+                </div>`;
+            crearBotonProfundizar(divResultado);
+
+        } catch (error) {
+            console.error("Error detectado:", error);
+            divResultado.innerHTML += `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
+        }
+    }, 1000);
+}
+
+async function elegirRunaInteractiva(elementoContenedor, runaElegida) {
+    if (document.querySelector('.carta-contenedor.seleccionada')) return;
+
+    elementoContenedor.classList.add('seleccionada', 'volteada');
+
+    ultimaPregunta = "Runa del Día";
+    ultimasCartas = [runaElegida.nombre];
+
+    const divResultado = document.getElementById('resultado');
+    if (!divResultado) return;
+
+    setTimeout(async () => {
+        divResultado.innerHTML = `<strong>✨ Tu Runa del Día: ${runaElegida.nombre} ✨</strong><div class="mesa-runas-lineal"><div class="runa-ficha" style="opacity: 1;"><img src="runas_imagenes/${runaElegida.id}.png" alt="${runaElegida.nombre}" class="img-runa"><strong>${runaElegida.nombre}</strong></div></div><p><em style='color: #f3d06c;'>Escuchando la sabiduría de la runa...</em></p>`;
+
+        try {
+            const respuesta = await fetch('/api/consultar-runas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pregunta: "Runa del Día", runas: [runaElegida.nombre], idTirada: "runa_dia", cantidadRunas: 1 })
+            });
+
+            if (!respuesta.ok) {
+                const errorData = await respuesta.json().catch(() => ({}));
+                throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
+            }
+            const datos = await respuesta.json();
+
+            divResultado.innerHTML = `
+                <h3 class="titulo-consulta">Tu Runa del Día: ${runaElegida.nombre}</h3>
+                <div class="lectura-layout lectura-simple">
+                    <div class="zona-oraculo">
+                        <div class="mesa-runas-lineal">
+                            <div class="runa-ficha" style="opacity: 1;">
+                                <img src="runas_imagenes/${runaElegida.id}.png" alt="${runaElegida.nombre}" class="img-runa">
+                                <strong>${runaElegida.nombre}</strong>
+                            </div>
+                        </div>
                     </div>
                     <div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>
                 </div>`;

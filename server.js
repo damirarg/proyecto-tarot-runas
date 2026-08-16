@@ -25,9 +25,10 @@ app.get('/', (req, res) => {
 const PERSONALIDAD_TAROTISTA = `Actuá como un experto tarotista tradicional basado estrictamente en el mazo Rider-Waite.
 
 REGLAS GRAMATICALES OBLIGATORIAS DE ESPAÑOL:
-1. Todos los nombres de cartas y números deben tratarse SIEMPRE en género MASCULINO.
-2. Usá exclusivamente "El" o "Del" antes del nombre del arcano. Ejemplos obligatorios: "El Seis de Espadas", "El Nueve de Bastos", "El Siete de Copas", "Del Cuatro de Bastos".
-3. JAMÁS escribas artículos femeninos solos con números como "La Seis", "La Nueve", "La Siete" o "de la Seis". Si querés usar género femenino, debés escribir explícitamente la palabra 'carta' antes (ejemplo: 'La carta del Seis de Espadas').`;
+1. Respetá el nombre exacto de cada carta.
+2. Usá "La Sota de Bastos", "La Sota de Copas", "La Sota de Espadas" y "La Sota de Oros". Nunca escribas "El Sota".
+3. Usá "La Reina..." para reinas, "El Rey..." para reyes y "El Caballo..." para caballos.
+4. Para cartas numeradas, podés usar "El Seis de Espadas", "El Nueve de Bastos", "El Siete de Copas" o "la carta del Seis de Espadas", pero no inventes artículos que contradigan el nombre de la carta.`;
 
 const PERSONALIDAD_RUNAS = `Actuá como un sabio maestro de la tradición nórdica y experto absoluto en el Futhark Antiguo. 
 
@@ -49,6 +50,7 @@ const FORMATO_LECTURA = `REGLAS DE PRESENTACIÓN:
 function obtenerPosicionesTarot(idTirada, cantidadCartas) {
     const posiciones = {
         "1": ["Energía central de la consulta"],
+        "carta_dia": ["Energía simbólica del día"],
         "3": ["Pasado", "Presente", "Futuro"],
         "3_ap": ["Consejo", "Reflexión", "Aprendizaje"],
         "4_am": ["Tu energía afectiva", "La energía de la otra parte", "Dinámica del vínculo", "Consejo para el vínculo"],
@@ -70,8 +72,18 @@ app.post('/api/consultar-tarot', async (req, res) => {
         const listaCartasTexto = listaCartas.length ? listaCartas.join(", ") : (cartas || "Seleccionadas");
         const posicionesTarot = obtenerPosicionesTarot(idTirada, cantidadCartas);
         const cartasConPosiciones = listaCartas.map((carta, index) => `${index + 1}. ${posicionesTarot[index] || `Posición ${index + 1}`}: ${carta}`).join("\n");
+        const esCartaDelDia = pregunta === "Carta del Día" || idTirada === "carta_dia";
 
-        const instrucciones = `El consultante pregunta: "${pregunta}". 
+        const instrucciones = esCartaDelDia ? `Carta elegida para la Carta del Día: ${listaCartasTexto}.
+
+        REGLAS ESPECÍFICAS PARA CARTA DEL DÍA:
+        - No la trates como una predicción cerrada ni como una tirada general.
+        - Interpretala como clima simbólico, actitud disponible y orientación práctica para atravesar el día.
+        - Estructurá la lectura con estos apartados exactos: **Energía del día**, **Qué observar**, **Qué evitar**, **Cómo aprovecharla**, **Consejo final**.
+        - Relacioná cada apartado con la carta elegida, evitando repetir el mismo significado en todos los párrafos.
+        - Mantené una extensión breve-media, clara y útil.
+
+        ${FORMATO_LECTURA}` : `El consultante pregunta: "${pregunta}". 
         Tirada elegida ID: ${idTirada} con ${cantidadCartas} cartas: ${listaCartasTexto}.
         Cartas por posición:
         ${cartasConPosiciones}
@@ -206,10 +218,14 @@ app.post('/api/consultar-runas', async (req, res) => {
     try {
         const { pregunta, runas, idTirada, cantidadRunas } = req.body;
         const listaRunasTexto = Array.isArray(runas) ? runas.join(", ") : (runas || "Seleccionadas");
+        const esRunaDelDia = pregunta === "Runa del Día" || idTirada === "runa_dia";
 
         let detallePosiciones = "";
 
-        if (idTirada === "runa_odin") {
+        if (idTirada === "runa_dia") {
+            detallePosiciones = `Lectura diaria de 1 runa.
+            - Runa 1: Energía simbólica del día, actitud disponible, observación útil y consejo práctico.`;
+        } else if (idTirada === "runa_odin") {
             detallePosiciones = `Tirada: La Runa de Odín (1 runa).
             - Runa 1: Indica la energía que rige sobre la situación. Marca el rumbo de los acontecimientos y actitudes a seguir, previniendo al consultante sobre cómo actuar. Proporciona una perspectiva directa, fresca y simple que invita a la intuición. Da un consejo claro y concreto.`;
         } else if (idTirada === "cruz_runica") {
@@ -267,7 +283,17 @@ app.post('/api/consultar-runas', async (req, res) => {
             detallePosiciones = `Tirada general con ${cantidadRunas} runas.`;
         }
 
-        const instrucciones = `El consultante pregunta: "${pregunta}". 
+        const instrucciones = esRunaDelDia ? `Runa elegida para la Runa del Día: ${listaRunasTexto}.
+
+        REGLAS ESPECÍFICAS PARA RUNA DEL DÍA:
+        - No la trates como una predicción cerrada ni como una consulta general.
+        - Interpretala como clima simbólico, actitud disponible y orientación práctica para atravesar el día.
+        - Estructurá la lectura con estos apartados exactos: **Energía del día**, **Qué observar**, **Qué evitar**, **Cómo aprovecharla**, **Consejo final**.
+        - Relacioná cada apartado con la runa elegida, evitando repetir el mismo significado en todos los párrafos.
+        - No uses artículo antes del nombre de la runa.
+        - Mantené una extensión breve-media, clara y útil.
+
+        ${FORMATO_LECTURA}` : `El consultante pregunta: "${pregunta}". 
         Método seleccionado: ${idTirada}.
         Runas extraídas en orden numérico: ${listaRunasTexto}.
 
