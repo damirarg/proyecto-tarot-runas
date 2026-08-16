@@ -5,11 +5,23 @@ let ultimaPregunta = "";
 let ultimasCartas = [];
 let modoActual = "tarot"; 
 let intervaloNieve = null;
+const nombresRunas = mazoRunas.map(runa => runa.nombre).join('|');
+const regexArticuloRuna = new RegExp(`\\b(el|la)\\s+(${nombresRunas})\\b`, 'gi');
+const regexContraccionRuna = new RegExp(`\\b(del|de la|al|a la)\\s+(${nombresRunas})\\b`, 'gi');
+
+function normalizarArticulosRunas(texto) {
+    return texto
+        .replace(regexContraccionRuna, (_, articulo, runa) => {
+            const base = articulo.toLowerCase().startsWith('a') ? 'a' : 'de';
+            return `${base} ${runa}`;
+        })
+        .replace(regexArticuloRuna, (_, __, runa) => runa);
+}
 
 // --- FUNCIÓN PARA CONVERTIR MARKDOWN EN HTML DORADO ---
 function formatearTextoMarkdown(texto) {
     if (!texto) return "";
-    const textoLimpio = texto
+    const textoLimpio = normalizarArticulosRunas(texto)
         .replace(/^\s{0,3}#{1,4}\s+(.+)$/gm, '### $1')
         .replace(/^\s*[-*]\s+/gm, '')
         .replace(/\n{3,}/g, '\n\n');
@@ -543,9 +555,26 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
         
         const datos = await respuesta.json();
         
-        divResultado.innerHTML = `<h3 class="titulo-consulta">Tu Pregunta: ${pregunta}</h3><div class="lectura-layout"><div class="zona-oraculo"><div class="${claseMesa}">` + 
-            cartasSeleccionadas.map((carta, index) => `<div class="posicion-carta pos-${index + 1}"><img src="imagenes/${imagenesRiderWaite[carta]}" class="carta-animada" style="animation-delay: ${index * 0.2}s" alt="${carta}"></div>`).join('') +
-            `</div></div><div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div></div>`;
+        const tiradaElegida = catalogoTiradas.find(tirada => tirada.id === idTirada);
+        const nombreTirada = tiradaElegida ? tiradaElegida.nombre : `Tirada de ${cantidadCartas} cartas`;
+        const listaCartas = cartasSeleccionadas.join(', ');
+        const claseLayoutTarot = cantidadCartas >= 7 ? 'lectura-tarot-amplia' : 'lectura-tarot';
+
+        divResultado.innerHTML = `
+            <h3 class="titulo-consulta">Tu Lectura de Tarot</h3>
+            <div class="lectura-resumen lectura-resumen-tarot">
+                <span><strong>Pregunta</strong>${pregunta}</span>
+                <span><strong>Método</strong>${nombreTirada}</span>
+                <span><strong>Cartas</strong>${listaCartas}</span>
+            </div>
+            <div class="lectura-layout ${claseLayoutTarot}">
+                <div class="zona-oraculo zona-oraculo-tarot">
+                    <div class="${claseMesa}">
+                        ${cartasSeleccionadas.map((carta, index) => `<div class="posicion-carta pos-${index + 1}"><img src="imagenes/${imagenesRiderWaite[carta]}" class="carta-animada" style="animation-delay: ${index * 0.2}s" alt="${carta}"></div>`).join('')}
+                    </div>
+                </div>
+                <div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>
+            </div>`;
         
         crearBotonProfundizar(divResultado);
     } catch (error) { 
