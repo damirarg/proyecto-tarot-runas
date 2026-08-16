@@ -46,13 +46,42 @@ const FORMATO_LECTURA = `REGLAS DE PRESENTACIÓN:
 - Cerrá con un apartado **Consejo final** claro, práctico y cuidadoso.
 - Si la pregunta toca salud, dinero o temas legales, mantené la lectura en clave reflexiva y recordá con naturalidad consultar a un profesional calificado para decisiones importantes.`;
 
+function obtenerPosicionesTarot(idTirada, cantidadCartas) {
+    const posiciones = {
+        "1": ["Energía central de la consulta"],
+        "3": ["Pasado", "Presente", "Futuro"],
+        "3_ap": ["Consejo", "Reflexión", "Aprendizaje"],
+        "4_am": ["Tu energía afectiva", "La energía de la otra parte", "Dinámica del vínculo", "Consejo para el vínculo"],
+        "4_lab": ["Situación laboral actual", "Obstáculo o tensión", "Recurso disponible", "Dirección aconsejada"],
+        "5_prof": ["Raíz del asunto", "Lo visible", "Lo oculto", "Camino de acción", "Resultado posible"],
+        "5": ["Camino actual", "Alternativa", "Lo que ayuda", "Lo que bloquea", "Consejo para decidir"],
+        "7": ["Influencia pasada", "Estado presente", "Factor oculto", "Consejo", "Influencia externa", "Obstáculo o desafío", "Resultado probable"],
+        "10": ["Situación central", "Lo que cruza o desafía", "Base inconsciente o raíz", "Pasado reciente", "Aspiración o posibilidad superior", "Futuro próximo", "Actitud del consultante", "Entorno e influencias externas", "Miedos y esperanzas", "Resultado o síntesis"],
+        "12": ["Energía general", "Recursos", "Comunicación", "Base emocional", "Creatividad", "Rutina y cuidado", "Vínculos", "Transformación", "Expansión", "Vocación", "Comunidad", "Cierre e integración"]
+    };
+
+    return posiciones[idTirada] || Array.from({ length: cantidadCartas }, (_, index) => `Posición ${index + 1}`);
+}
+
 app.post('/api/consultar-tarot', async (req, res) => {
     try {
         const { pregunta, cartas, idTirada, cantidadCartas } = req.body;
-        const listaCartasTexto = Array.isArray(cartas) ? cartas.join(", ") : (cartas || "Seleccionadas");
+        const listaCartas = Array.isArray(cartas) ? cartas : [];
+        const listaCartasTexto = listaCartas.length ? listaCartas.join(", ") : (cartas || "Seleccionadas");
+        const posicionesTarot = obtenerPosicionesTarot(idTirada, cantidadCartas);
+        const cartasConPosiciones = listaCartas.map((carta, index) => `${index + 1}. ${posicionesTarot[index] || `Posición ${index + 1}`}: ${carta}`).join("\n");
 
         const instrucciones = `El consultante pregunta: "${pregunta}". 
         Tirada elegida ID: ${idTirada} con ${cantidadCartas} cartas: ${listaCartasTexto}.
+        Cartas por posición:
+        ${cartasConPosiciones}
+
+        REGLAS INTERPRETATIVAS OBLIGATORIAS PARA TAROT:
+        - Interpretá cada carta según la posición exacta en la que apareció, no como significado aislado.
+        - Explicá qué función cumple cada posición dentro de la tirada cuando sea relevante.
+        - Si una carta positiva aparece en una posición de bloqueo, contra, miedo, exceso o desafío, no la leas automáticamente como favorable: analizá si indica exceso de esa energía, idealización, dependencia, una virtud mal usada o una energía que falta.
+        - Si una carta difícil aparece en una posición favorable, analizá qué aprendizaje, advertencia útil o fuerza de transformación puede aportar.
+        - En tiradas de 7 cartas o más, cerrá con una síntesis que conecte patrones entre cartas, tensiones internas, repeticiones de palos/arcanos y dirección general de la lectura.
         Ofrece una lectura clara, empática y precisa siguiendo la tradición Rider-Waite.
 
         ${FORMATO_LECTURA}`;
@@ -66,7 +95,7 @@ app.post('/api/consultar-tarot', async (req, res) => {
             body: JSON.stringify({
                 model: "llama-3.1-8b-instant", // <-- MODELO ACTUALIZADO
                 temperature: 0.2,
-                max_tokens: 1200,
+                max_tokens: cantidadCartas >= 7 ? 1900 : 1200,
                 messages: [
                     { role: "system", content: PERSONALIDAD_TAROTISTA },
                     { role: "user", content: instrucciones }
