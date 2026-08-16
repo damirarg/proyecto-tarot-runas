@@ -9,9 +9,14 @@ let intervaloNieve = null;
 // --- FUNCIÓN PARA CONVERTIR MARKDOWN EN HTML DORADO ---
 function formatearTextoMarkdown(texto) {
     if (!texto) return "";
-    return texto
+    const textoLimpio = texto
+        .replace(/^\s{0,3}#{1,4}\s+(.+)$/gm, '### $1')
+        .replace(/^\s*[-*]\s+/gm, '')
+        .replace(/\n{3,}/g, '\n\n');
+
+    return textoLimpio
+        .replace(/^###\s*(.*?)$/gm, '<h4 style="color: #f3d06c; font-family: \'Playfair Display\', serif; margin-top: 15px; margin-bottom: 5px;">$1</h4>')
         .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #f3d06c; font-family: \'Playfair Display\', serif; font-size: 1.1em;">$1</strong>')
-        .replace(/###\s*(.*?)\n/g, '<h4 style="color: #f3d06c; font-family: \'Playfair Display\', serif; margin-top: 15px; margin-bottom: 5px;">$1</h4>')
         .replace(/\n/g, '<br>');
 }
 

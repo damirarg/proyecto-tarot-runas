@@ -36,6 +36,15 @@ REGLAS PARA LAS LECTURAS DE RUNAS:
 2. Usá un tono místico, respetuoso, empático y constructivo. 
 3. Utiliza formato Markdown con títulos destacados en **negritas** para ordenar la lectura de forma impecable.`;
 
+const FORMATO_LECTURA = `REGLAS DE PRESENTACIÓN:
+- No repitas la pregunta, el método, la cantidad de símbolos ni la lista completa de cartas o runas al inicio. Esa información ya se muestra en la interfaz.
+- No escribas encabezados administrativos como "Consultante", "Método", "Runas extraídas", "Cartas extraídas", "Lectura de Runas Vikingas" o "Lectura de Tarot".
+- Empezá directamente con la interpretación.
+- Usá solo títulos breves en **negrita**. No uses encabezados con #, ## o ###.
+- No uses listas con asteriscos sueltos. Si necesitás ordenar ideas, usá párrafos cortos.
+- Cerrá con un apartado **Consejo final** claro, práctico y cuidadoso.
+- Si la pregunta toca salud, dinero o temas legales, mantené la lectura en clave reflexiva y recordá con naturalidad consultar a un profesional calificado para decisiones importantes.`;
+
 app.post('/api/consultar-tarot', async (req, res) => {
     try {
         const { pregunta, cartas, idTirada, cantidadCartas } = req.body;
@@ -43,7 +52,9 @@ app.post('/api/consultar-tarot', async (req, res) => {
 
         const instrucciones = `El consultante pregunta: "${pregunta}". 
         Tirada elegida ID: ${idTirada} con ${cantidadCartas} cartas: ${listaCartasTexto}.
-        Ofrece una lectura clara, empática y precisa siguiendo la tradición Rider-Waite. Usa formato Markdown con **negritas** para los títulos.`;
+        Ofrece una lectura clara, empática y precisa siguiendo la tradición Rider-Waite.
+
+        ${FORMATO_LECTURA}`;
 
         const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -83,7 +94,9 @@ app.post('/api/profundizar-tarot', async (req, res) => {
         const listaCartasTexto = Array.isArray(cartas) ? cartas.join(", ") : (cartas || "de la tirada");
 
         const instrucciones = `El usuario consultó sobre: "${pregunta || 'su inquietud'}" con las cartas: ${listaCartasTexto}.
-        Por favor, ofrecé una clarificación adicional, desglosando con mayor sencillez y profundidad el consejo global de estas cartas para disipar cualquier duda. Sé cálido, claro y alentador. Usa formato Markdown con **negritas** para los títulos.`;
+        Por favor, ofrecé una clarificación adicional, desglosando con mayor sencillez y profundidad el consejo global de estas cartas para disipar cualquier duda. Sé cálido, claro y alentador.
+
+        ${FORMATO_LECTURA}`;
 
         const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -123,7 +136,9 @@ app.post('/api/profundizar-runas', async (req, res) => {
         const listaRunasTexto = Array.isArray(runas) ? runas.join(", ") : (runas || "de la tirada");
 
         const instrucciones = `El usuario consultó sobre: "${pregunta || 'su inquietud'}" con las runas: ${listaRunasTexto}.
-        Por favor, ofrecé una clarificación adicional, desglosando con mayor sencillez y profundidad el consejo global de estas runas para disipar cualquier duda. Sé cálido, claro, alentador y recordá que estás hablando de la sabiduría rúnica (no uses la palabra "carta"). Usa formato Markdown con **negritas** para los títulos.`;
+        Por favor, ofrecé una clarificación adicional, desglosando con mayor sencillez y profundidad el consejo global de estas runas para disipar cualquier duda. Sé cálido, claro, alentador y recordá que estás hablando de la sabiduría rúnica (no uses la palabra "carta").
+
+        ${FORMATO_LECTURA}`;
 
         const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -229,7 +244,9 @@ app.post('/api/consultar-runas', async (req, res) => {
         Estructura de la lectura obligatoria basada en la disposición rúnica:
         ${detallePosiciones}
 
-        Ofrece una lectura de runas vikingas profunda, mística y estructurada paso a paso según cada posición indicada. Usa formato Markdown con **negritas** para los títulos.`;
+        Ofrece una lectura de runas vikingas profunda, mística y estructurada paso a paso según cada posición indicada.
+
+        ${FORMATO_LECTURA}`;
 
         const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
