@@ -153,6 +153,7 @@ const mensajeAuth = document.getElementById('mensajeAuth');
 const cuentaInicial = document.getElementById('cuentaInicial');
 const cuentaNombre = document.getElementById('cuentaNombre');
 const cuentaEmail = document.getElementById('cuentaEmail');
+const cuentaEstadoRitual = document.getElementById('cuentaEstadoRitual');
 const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 const mensajeSesion = document.getElementById('mensajeSesion');
 
@@ -343,6 +344,40 @@ function actualizarInterfazCuenta(sesion) {
         cuentaNombre.textContent = nombre;
         cuentaEmail.textContent = usuario.email || '';
         cuentaInicial.textContent = nombre.charAt(0).toUpperCase();
+        cuentaEstadoRitual.textContent = 'Comprobando el beneficio de hoy...';
+        cuentaEstadoRitual.className = 'cuenta-estado-ritual';
+    }
+}
+
+async function crearHeadersApi() {
+    const headers = { 'Content-Type': 'application/json' };
+    if (!clienteSupabase) return headers;
+
+    const { data } = await clienteSupabase.auth.getSession();
+    if (data.session?.access_token) {
+        headers.Authorization = `Bearer ${data.session.access_token}`;
+    }
+    return headers;
+}
+
+async function cargarEstadoCuenta() {
+    if (!sesionUsuario || !cuentaEstadoRitual) return;
+
+    try {
+        const respuesta = await fetch('/api/cuenta/estado', {
+            headers: await crearHeadersApi()
+        });
+        const datos = await respuesta.json().catch(() => ({}));
+        if (!respuesta.ok) throw new Error(datos.error || 'No se pudo consultar el beneficio.');
+
+        const disponible = datos.ritualDiarioDisponible;
+        cuentaEstadoRitual.textContent = disponible
+            ? 'Tu ritual gratuito de hoy está disponible.'
+            : 'Ya utilizaste el ritual de hoy. Se renueva mañana.';
+        cuentaEstadoRitual.className = `cuenta-estado-ritual ${disponible ? 'disponible' : 'utilizado'}`;
+    } catch (error) {
+        cuentaEstadoRitual.textContent = error.message;
+        cuentaEstadoRitual.className = 'cuenta-estado-ritual error';
     }
 }
 
@@ -356,6 +391,8 @@ function abrirModalCuenta() {
     if (!sesionUsuario && authConfigurado) {
         const campoInicial = modoFormularioAuth === 'registro' ? authNombre : authEmail;
         window.setTimeout(() => campoInicial?.focus(), 0);
+    } else if (sesionUsuario) {
+        cargarEstadoCuenta();
     }
 }
 
@@ -710,6 +747,15 @@ function ejecutarTiradaElegida(idTirada) {
 
 // --- RITUAL INTERACTIVO DE LA CARTA DEL DÍA ---
 document.getElementById('btnRitualDia')?.addEventListener('click', () => {
+    if (!sesionUsuario) {
+        if (authConfigurado) cambiarModoAuth('registro');
+        abrirModalCuenta();
+        if (authConfigurado) {
+            mostrarMensajeAuth('Creá tu cuenta gratuita para recibir el ritual del día.', 'exito');
+        }
+        return;
+    }
+
     if (pantallaBienvenida) pantallaBienvenida.style.display = "none";
     if (pantallaLectura) pantallaLectura.style.display = "flex";
     activarModoLectura(true);
@@ -779,7 +825,7 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
         try {
             const respuesta = await fetch('/api/consultar-tarot', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: await crearHeadersApi(),
                 body: JSON.stringify({ pregunta: "Carta del Día", cartas: [cartaElegida], idTirada: "carta_dia", cantidadCartas: 1 })
             });
 
@@ -798,6 +844,7 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
                     <div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>
                 </div>`;
             crearBotonProfundizar(divResultado);
+            cargarEstadoCuenta();
 
         } catch (error) {
             console.error("Error detectado:", error);
@@ -823,7 +870,7 @@ async function elegirRunaInteractiva(elementoContenedor, runaElegida) {
         try {
             const respuesta = await fetch('/api/consultar-runas', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: await crearHeadersApi(),
                 body: JSON.stringify({ pregunta: "Runa del Día", runas: [runaElegida.nombre], idTirada: "runa_dia", cantidadRunas: 1 })
             });
 
@@ -847,6 +894,7 @@ async function elegirRunaInteractiva(elementoContenedor, runaElegida) {
                     <div class="texto-lectura">${formatearTextoMarkdown(datos.lectura)}</div>
                 </div>`;
             crearBotonProfundizar(divResultado);
+            cargarEstadoCuenta();
 
         } catch (error) {
             console.error("Error detectado:", error);
@@ -887,7 +935,7 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
     try {
         const respuesta = await fetch('/api/consultar-tarot', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await crearHeadersApi(),
             body: JSON.stringify({ pregunta, cartas: cartasSeleccionadas, idTirada, cantidadCartas })
         });
         
@@ -955,7 +1003,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
     try {
         const respuesta = await fetch('/api/consultar-runas', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await crearHeadersApi(),
             body: JSON.stringify({ pregunta, runas: ultimasCartas, idTirada, cantidadRunas })
         });
         
@@ -1030,7 +1078,7 @@ function crearBotonProfundizar(contenedor) {
 
             const respuesta = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: await crearHeadersApi(),
                 body: JSON.stringify(payload)
             });
             

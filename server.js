@@ -17,6 +17,7 @@ const API_KEY_GROQ = process.env.GROQ_API_KEY;
 const MODELO_GROQ = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_PUBLIC_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -31,6 +32,103 @@ app.get('/api/configuracion-publica', (req, res) => {
         supabaseUrl: SUPABASE_URL || null,
         supabasePublicKey: SUPABASE_PUBLIC_KEY || null
     });
+});
+
+class ErrorAplicacion extends Error {
+    constructor(status, code, message) {
+        super(message);
+        this.status = status;
+        this.code = code;
+    }
+}
+
+async function obtenerUsuarioAutenticado(req) {
+    if (!SUPABASE_URL || !SUPABASE_PUBLIC_KEY) {
+        throw new ErrorAplicacion(503, 'AUTH_NOT_CONFIGURED', 'El servicio de cuentas todavía no está disponible.');
+    }
+
+    const authorization = req.get('authorization') || '';
+    if (!authorization.startsWith('Bearer ')) {
+        throw new ErrorAplicacion(401, 'AUTH_REQUIRED', 'Ingresá a tu cuenta para acceder al ritual diario.');
+    }
+
+    const respuesta = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: {
+            apikey: SUPABASE_PUBLIC_KEY,
+            Authorization: authorization
+        }
+    });
+
+    if (!respuesta.ok) {
+        throw new ErrorAplicacion(401, 'INVALID_SESSION', 'Tu sesión venció. Volvé a ingresar para continuar.');
+    }
+
+    return respuesta.json();
+}
+
+async function ejecutarFuncionPrivada(nombre, payload) {
+    if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
+        throw new ErrorAplicacion(503, 'USAGE_NOT_CONFIGURED', 'El control de beneficios todavía no está disponible.');
+    }
+
+    const respuesta = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${nombre}`, {
+        method: 'POST',
+        headers: {
+            apikey: SUPABASE_SECRET_KEY,
+            Authorization: `Bearer ${SUPABASE_SECRET_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!respuesta.ok) {
+        const detalle = await respuesta.text();
+        console.error(`Error en Supabase RPC (${nombre}):`, respuesta.status, detalle);
+        throw new ErrorAplicacion(503, 'USAGE_SERVICE_ERROR', 'No pudimos comprobar tu beneficio diario. Probá nuevamente.');
+    }
+
+    return respuesta.json();
+}
+
+async function reclamarRitualDiario(userId) {
+    return ejecutarFuncionPrivada('claim_daily_ritual', { p_user_id: userId });
+}
+
+async function liberarRitualDiario(userId) {
+    try {
+        await ejecutarFuncionPrivada('release_daily_ritual', { p_user_id: userId });
+    } catch (error) {
+        console.error('No se pudo devolver el ritual diario:', error);
+    }
+}
+
+function responderErrorAplicacion(res, error) {
+    if (!(error instanceof ErrorAplicacion)) return false;
+    res.status(error.status).json({ error: error.message, code: error.code });
+    return true;
+}
+
+app.get('/api/cuenta/estado', async (req, res) => {
+    try {
+        const usuario = await obtenerUsuarioAutenticado(req);
+        const estado = await ejecutarFuncionPrivada('get_daily_access', { p_user_id: usuario.id });
+        const uso = Array.isArray(estado) ? estado[0] : estado;
+
+        res.json({
+            usuario: {
+                id: usuario.id,
+                email: usuario.email,
+                nombre: usuario.user_metadata?.nombre || ''
+            },
+            plan: 'free',
+            ritualDiarioDisponible: Number(uso?.ritual_used || 0) < 1,
+            tiradasPremiumUsadas: Number(uso?.paid_readings_used || 0)
+        });
+    } catch (error) {
+        if (responderErrorAplicacion(res, error)) return;
+        console.error('Error consultando el estado de cuenta:', error);
+        res.status(500).json({ error: 'No pudimos consultar el estado de tu cuenta.' });
+    }
 });
 
 const PERSONALIDAD_TAROTISTA = `Actuá como un experto tarotista tradicional basado estrictamente en el mazo Rider-Waite.
@@ -77,6 +175,7 @@ function obtenerPosicionesTarot(idTirada, cantidadCartas) {
 }
 
 app.post('/api/consultar-tarot', async (req, res) => {
+    let ritualConsumidoPor = null;
     try {
         const { pregunta, cartas, idTirada, cantidadCartas } = req.body;
         const listaCartas = Array.isArray(cartas) ? cartas : [];
@@ -84,6 +183,15 @@ app.post('/api/consultar-tarot', async (req, res) => {
         const posicionesTarot = obtenerPosicionesTarot(idTirada, cantidadCartas);
         const cartasConPosiciones = listaCartas.map((carta, index) => `${index + 1}. ${posicionesTarot[index] || `Posición ${index + 1}`}: ${carta}`).join("\n");
         const esCartaDelDia = pregunta === "Carta del Día" || idTirada === "carta_dia";
+
+        if (esCartaDelDia) {
+            const usuario = await obtenerUsuarioAutenticado(req);
+            const disponible = await reclamarRitualDiario(usuario.id);
+            if (!disponible) {
+                throw new ErrorAplicacion(429, 'DAILY_RITUAL_USED', 'Ya utilizaste tu Carta o Runa del Día. Podrás volver mañana.');
+            }
+            ritualConsumidoPor = usuario.id;
+        }
 
         const instrucciones = esCartaDelDia ? `Carta elegida para la Carta del Día: ${listaCartasTexto}.
 
@@ -129,6 +237,10 @@ app.post('/api/consultar-tarot', async (req, res) => {
         if (!respuestaGroq.ok) {
             const detalleError = await respuestaGroq.text();
             console.error("Error en API Groq (Tarot):", respuestaGroq.status, detalleError);
+            if (ritualConsumidoPor) {
+                await liberarRitualDiario(ritualConsumidoPor);
+                ritualConsumidoPor = null;
+            }
             return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
         }
 
@@ -136,6 +248,8 @@ app.post('/api/consultar-tarot', async (req, res) => {
         res.json({ lectura: datos.choices[0].message.content });
 
     } catch (error) {
+        if (ritualConsumidoPor) await liberarRitualDiario(ritualConsumidoPor);
+        if (responderErrorAplicacion(res, error)) return;
         console.error("Error interno:", error);
         res.status(500).json({ error: "Error interno del servidor Node.js." });
     }
@@ -226,10 +340,20 @@ app.post('/api/profundizar-runas', async (req, res) => {
 });
 
 app.post('/api/consultar-runas', async (req, res) => {
+    let ritualConsumidoPor = null;
     try {
         const { pregunta, runas, idTirada, cantidadRunas } = req.body;
         const listaRunasTexto = Array.isArray(runas) ? runas.join(", ") : (runas || "Seleccionadas");
         const esRunaDelDia = pregunta === "Runa del Día" || idTirada === "runa_dia";
+
+        if (esRunaDelDia) {
+            const usuario = await obtenerUsuarioAutenticado(req);
+            const disponible = await reclamarRitualDiario(usuario.id);
+            if (!disponible) {
+                throw new ErrorAplicacion(429, 'DAILY_RITUAL_USED', 'Ya utilizaste tu Carta o Runa del Día. Podrás volver mañana.');
+            }
+            ritualConsumidoPor = usuario.id;
+        }
 
         let detallePosiciones = "";
 
@@ -335,6 +459,10 @@ app.post('/api/consultar-runas', async (req, res) => {
         if (!respuestaGroq.ok) {
             const detalleError = await respuestaGroq.text();
             console.error("Error en API Groq (Runas):", respuestaGroq.status, detalleError);
+            if (ritualConsumidoPor) {
+                await liberarRitualDiario(ritualConsumidoPor);
+                ritualConsumidoPor = null;
+            }
             return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
         }
 
@@ -342,6 +470,8 @@ app.post('/api/consultar-runas', async (req, res) => {
         res.json({ lectura: datos.choices[0].message.content });
 
     } catch (error) {
+        if (ritualConsumidoPor) await liberarRitualDiario(ritualConsumidoPor);
+        if (responderErrorAplicacion(res, error)) return;
         console.error("Error interno en /api/consultar-runas:", error);
         res.status(500).json({ error: "Error interno del servidor Node.js al consultar runas." });
     }

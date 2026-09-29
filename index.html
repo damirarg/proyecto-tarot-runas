@@ -108,7 +108,10 @@
             <p class="texto-invitacion">¿Qué misterios deseas desvelar hoy?</p>
             
             <div class="botonera-solapas">
-                <button id="btnRitualDia" class="btn-solapa">✨ <span id="textoRitualDia">Carta del Día</span></button>
+                <button id="btnRitualDia" class="btn-solapa btn-ritual-dia">
+                    <span>✨ <span id="textoRitualDia">Carta del Día</span></span>
+                    <small>Gratis con tu cuenta · uno por día</small>
+                </button>
                 <button id="btnIrTiradas" class="btn-solapa">🃏 Realizar Tirada</button>
                 <button class="btn-solapa btn-salir-reino">🚪 Salir del Reino</button>
             </div>
@@ -221,7 +224,8 @@
                 <div class="cuenta-plan">
                     <span>Plan actual</span>
                     <strong>Acceso gratuito</strong>
-                    <p>La membresía y el historial de lecturas se habilitarán en la próxima etapa.</p>
+                    <p>Incluye una Carta del Día o Runa del Día.</p>
+                    <p id="cuentaEstadoRitual" class="cuenta-estado-ritual">Comprobando el beneficio de hoy...</p>
                 </div>
                 <button type="button" id="btnCerrarSesion" class="btn-auth-secundario">Cerrar sesión</button>
                 <p id="mensajeSesion" class="mensaje-auth" aria-live="polite"></p>
