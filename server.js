@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 3000;
 
 // La clave de la API se lee de las variables de entorno de Render
 const API_KEY_GROQ = process.env.GROQ_API_KEY;
+const MODELO_GROQ = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -105,7 +106,7 @@ app.post('/api/consultar-tarot', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama-3.1-8b-instant", // <-- MODELO ACTUALIZADO
+                model: MODELO_GROQ,
                 temperature: 0.2,
                 max_tokens: cantidadCartas >= 7 ? 1900 : 1200,
                 messages: [
@@ -147,7 +148,7 @@ app.post('/api/profundizar-tarot', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama-3.1-8b-instant", // <-- MODELO ACTUALIZADO
+                model: MODELO_GROQ,
                 temperature: 0.2,
                 max_tokens: 1000,
                 messages: [
@@ -189,7 +190,7 @@ app.post('/api/profundizar-runas', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama-3.1-8b-instant", // <-- MODELO ACTUALIZADO
+                model: MODELO_GROQ,
                 temperature: 0.2,
                 max_tokens: 1000,
                 messages: [
@@ -311,7 +312,7 @@ app.post('/api/consultar-runas', async (req, res) => {
                 "Authorization": `Bearer ${API_KEY_GROQ}`
             },
             body: JSON.stringify({
-                model: "llama-3.1-8b-instant", // <-- MODELO ACTUALIZADO
+                model: MODELO_GROQ,
                 temperature: 0.3,
                 max_tokens: 1500,
                 messages: [
