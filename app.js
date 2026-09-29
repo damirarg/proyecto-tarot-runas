@@ -126,6 +126,40 @@ const modalInformativo = document.getElementById('modalInformativo');
 const modalEtiqueta = document.getElementById('modalEtiqueta');
 const modalTitulo = document.getElementById('modalTitulo');
 const modalContenido = document.getElementById('modalContenido');
+const modalCuenta = document.getElementById('modalCuenta');
+const btnCuenta = document.getElementById('btnCuenta');
+const btnCuentaReino = document.getElementById('btnCuentaReino');
+const textoBtnCuenta = document.getElementById('textoBtnCuenta');
+const textoBtnCuentaReino = document.getElementById('textoBtnCuentaReino');
+const authAcceso = document.getElementById('authAcceso');
+const authSesion = document.getElementById('authSesion');
+const authNoConfigurado = document.getElementById('authNoConfigurado');
+const cuentaTitulo = document.getElementById('cuentaTitulo');
+const cuentaIntroduccion = document.getElementById('cuentaIntroduccion');
+const tabIngresar = document.getElementById('tabIngresar');
+const tabRegistro = document.getElementById('tabRegistro');
+const formAuth = document.getElementById('formAuth');
+const campoNombre = document.getElementById('campoNombre');
+const campoEmail = document.getElementById('campoEmail');
+const campoClave = document.getElementById('campoClave');
+const campoConfirmarClave = document.getElementById('campoConfirmarClave');
+const authNombre = document.getElementById('authNombre');
+const authEmail = document.getElementById('authEmail');
+const authClave = document.getElementById('authClave');
+const authConfirmarClave = document.getElementById('authConfirmarClave');
+const btnEnviarAuth = document.getElementById('btnEnviarAuth');
+const btnRecuperarClave = document.getElementById('btnRecuperarClave');
+const mensajeAuth = document.getElementById('mensajeAuth');
+const cuentaInicial = document.getElementById('cuentaInicial');
+const cuentaNombre = document.getElementById('cuentaNombre');
+const cuentaEmail = document.getElementById('cuentaEmail');
+const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+const mensajeSesion = document.getElementById('mensajeSesion');
+
+let clienteSupabase = null;
+let sesionUsuario = null;
+let authConfigurado = null;
+let modoFormularioAuth = 'ingresar';
 
 const contenidosInformativos = {
     "como-funciona": {
@@ -226,8 +260,252 @@ function cerrarModalInformativo() {
     if (!modalInformativo) return;
     modalInformativo.classList.remove('visible');
     modalInformativo.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('modal-abierto');
+    if (!modalCuenta?.classList.contains('visible')) document.body.classList.remove('modal-abierto');
 }
+
+function mostrarMensajeAuth(texto, tipo = '') {
+    if (!mensajeAuth) return;
+    mensajeAuth.textContent = texto;
+    mensajeAuth.className = `mensaje-auth${tipo ? ` mensaje-auth-${tipo}` : ''}`;
+}
+
+function traducirErrorAuth(error) {
+    const mensaje = (error?.message || '').toLowerCase();
+    if (mensaje.includes('invalid login credentials')) return 'El email o la contraseña no son correctos.';
+    if (mensaje.includes('email not confirmed')) return 'Todavía falta confirmar tu email. Revisá tu bandeja de entrada.';
+    if (mensaje.includes('user already registered')) return 'Ya existe una cuenta con ese email.';
+    if (mensaje.includes('password should be')) return 'La contraseña debe tener al menos 8 caracteres.';
+    if (mensaje.includes('rate limit')) return 'Se hicieron demasiados intentos. Esperá unos minutos y volvé a probar.';
+    return 'No pudimos completar la operación. Probá nuevamente en unos instantes.';
+}
+
+function cambiarModoAuth(modo) {
+    modoFormularioAuth = modo;
+    mostrarMensajeAuth('');
+
+    const esRegistro = modo === 'registro';
+    const esRecuperacion = modo === 'recuperar';
+    const esNuevaClave = modo === 'nueva-clave';
+
+    campoNombre.hidden = !esRegistro;
+    campoEmail.hidden = esNuevaClave;
+    campoClave.hidden = esRecuperacion;
+    campoConfirmarClave.hidden = !(esRegistro || esNuevaClave);
+    btnRecuperarClave.hidden = modo !== 'ingresar';
+    tabIngresar.classList.toggle('activo', modo === 'ingresar');
+    tabRegistro.classList.toggle('activo', esRegistro);
+    tabIngresar.setAttribute('aria-selected', String(modo === 'ingresar'));
+    tabRegistro.setAttribute('aria-selected', String(esRegistro));
+
+    authClave.autocomplete = esNuevaClave || esRegistro ? 'new-password' : 'current-password';
+
+    if (esRegistro) {
+        cuentaTitulo.textContent = 'Crear cuenta';
+        cuentaIntroduccion.textContent = 'Registrate para acceder al ritual diario y preparar tu futura membresía.';
+        btnEnviarAuth.textContent = 'Crear mi cuenta';
+    } else if (esRecuperacion) {
+        cuentaTitulo.textContent = 'Recuperar acceso';
+        cuentaIntroduccion.textContent = 'Te enviaremos un enlace seguro para elegir una contraseña nueva.';
+        btnEnviarAuth.textContent = 'Enviar enlace';
+    } else if (esNuevaClave) {
+        cuentaTitulo.textContent = 'Nueva contraseña';
+        cuentaIntroduccion.textContent = 'Elegí una contraseña nueva para volver a ingresar a tu cuenta.';
+        btnEnviarAuth.textContent = 'Guardar contraseña';
+    } else {
+        cuentaTitulo.textContent = 'Ingresar';
+        cuentaIntroduccion.textContent = 'Accedé a tu cuenta para continuar tu experiencia personal en Oráculos.';
+        btnEnviarAuth.textContent = 'Ingresar';
+    }
+}
+
+function actualizarInterfazCuenta(sesion) {
+    sesionUsuario = sesion || null;
+    const usuario = sesionUsuario?.user;
+    const nombre = usuario?.user_metadata?.nombre?.trim() || usuario?.email?.split('@')[0] || 'Mi cuenta';
+
+    if (textoBtnCuenta) textoBtnCuenta.textContent = usuario ? nombre : 'Ingresar';
+    if (textoBtnCuentaReino) textoBtnCuentaReino.textContent = usuario ? nombre : 'Mi cuenta';
+    btnCuenta?.classList.toggle('sesion-activa', Boolean(usuario));
+    btnCuentaReino?.classList.toggle('sesion-activa', Boolean(usuario));
+
+    if (authConfigurado === false) {
+        authAcceso.hidden = true;
+        authSesion.hidden = true;
+        authNoConfigurado.hidden = false;
+        return;
+    }
+
+    authNoConfigurado.hidden = true;
+    authAcceso.hidden = Boolean(usuario);
+    authSesion.hidden = !usuario;
+
+    if (usuario) {
+        cuentaNombre.textContent = nombre;
+        cuentaEmail.textContent = usuario.email || '';
+        cuentaInicial.textContent = nombre.charAt(0).toUpperCase();
+    }
+}
+
+function abrirModalCuenta() {
+    if (!modalCuenta) return;
+    actualizarInterfazCuenta(sesionUsuario);
+    modalCuenta.classList.add('visible');
+    modalCuenta.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-abierto');
+
+    if (!sesionUsuario && authConfigurado) {
+        const campoInicial = modoFormularioAuth === 'registro' ? authNombre : authEmail;
+        window.setTimeout(() => campoInicial?.focus(), 0);
+    }
+}
+
+function cerrarModalCuenta() {
+    if (!modalCuenta) return;
+    modalCuenta.classList.remove('visible');
+    modalCuenta.setAttribute('aria-hidden', 'true');
+    if (!modalInformativo?.classList.contains('visible')) document.body.classList.remove('modal-abierto');
+}
+
+async function inicializarAutenticacion() {
+    try {
+        const respuesta = await fetch('/api/configuracion-publica');
+        const configuracion = await respuesta.json();
+
+        if (!configuracion.authDisponible || !window.supabase?.createClient) {
+            authConfigurado = false;
+            actualizarInterfazCuenta(null);
+            return;
+        }
+
+        clienteSupabase = window.supabase.createClient(
+            configuracion.supabaseUrl,
+            configuracion.supabasePublicKey,
+            {
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true
+                }
+            }
+        );
+        authConfigurado = true;
+
+        clienteSupabase.auth.onAuthStateChange((evento, sesion) => {
+            actualizarInterfazCuenta(sesion);
+            if (evento === 'PASSWORD_RECOVERY') {
+                cambiarModoAuth('nueva-clave');
+                abrirModalCuenta();
+            }
+        });
+
+        const { data } = await clienteSupabase.auth.getSession();
+        actualizarInterfazCuenta(data.session);
+    } catch (error) {
+        console.error('No se pudo iniciar el servicio de cuentas:', error);
+        authConfigurado = false;
+        actualizarInterfazCuenta(null);
+    }
+}
+
+btnCuenta?.addEventListener('click', abrirModalCuenta);
+btnCuentaReino?.addEventListener('click', abrirModalCuenta);
+document.querySelectorAll('[data-cerrar-cuenta]').forEach(btn => btn.addEventListener('click', cerrarModalCuenta));
+tabIngresar?.addEventListener('click', () => cambiarModoAuth('ingresar'));
+tabRegistro?.addEventListener('click', () => cambiarModoAuth('registro'));
+btnRecuperarClave?.addEventListener('click', () => cambiarModoAuth('recuperar'));
+
+formAuth?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!clienteSupabase) {
+        mostrarMensajeAuth('El servicio de cuentas todavía no está disponible.', 'error');
+        return;
+    }
+
+    const email = authEmail.value.trim();
+    const clave = authClave.value;
+    const confirmarClave = authConfirmarClave.value;
+
+    if (modoFormularioAuth !== 'nueva-clave' && !email) {
+        mostrarMensajeAuth('Ingresá un email válido.', 'error');
+        authEmail.focus();
+        return;
+    }
+    if (modoFormularioAuth !== 'recuperar' && clave.length < 8) {
+        mostrarMensajeAuth('La contraseña debe tener al menos 8 caracteres.', 'error');
+        authClave.focus();
+        return;
+    }
+    if ((modoFormularioAuth === 'registro' || modoFormularioAuth === 'nueva-clave') && clave !== confirmarClave) {
+        mostrarMensajeAuth('Las contraseñas no coinciden.', 'error');
+        authConfirmarClave.focus();
+        return;
+    }
+
+    btnEnviarAuth.disabled = true;
+    mostrarMensajeAuth('Procesando...', 'cargando');
+
+    try {
+        if (modoFormularioAuth === 'registro') {
+            const nombre = authNombre.value.trim();
+            if (nombre.length < 2) {
+                throw new Error('NOMBRE_INVALIDO');
+            }
+            const { data, error } = await clienteSupabase.auth.signUp({
+                email,
+                password: clave,
+                options: {
+                    data: { nombre },
+                    emailRedirectTo: `${window.location.origin}${window.location.pathname}`
+                }
+            });
+            if (error) throw error;
+            if (data.session) {
+                mostrarMensajeAuth('Tu cuenta quedó creada y ya podés usarla.', 'exito');
+            } else {
+                cambiarModoAuth('ingresar');
+                mostrarMensajeAuth('Te enviamos un email para confirmar la cuenta.', 'exito');
+            }
+        } else if (modoFormularioAuth === 'recuperar') {
+            const { error } = await clienteSupabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}${window.location.pathname}`
+            });
+            if (error) throw error;
+            mostrarMensajeAuth('Revisá tu email: te enviamos el enlace para recuperar el acceso.', 'exito');
+        } else if (modoFormularioAuth === 'nueva-clave') {
+            const { error } = await clienteSupabase.auth.updateUser({ password: clave });
+            if (error) throw error;
+            cambiarModoAuth('ingresar');
+            mostrarMensajeAuth('La contraseña fue actualizada correctamente.', 'exito');
+        } else {
+            const { error } = await clienteSupabase.auth.signInWithPassword({ email, password: clave });
+            if (error) throw error;
+            formAuth.reset();
+            cerrarModalCuenta();
+        }
+    } catch (error) {
+        if (error.message === 'NOMBRE_INVALIDO') {
+            mostrarMensajeAuth('Ingresá un nombre de al menos 2 caracteres.', 'error');
+            authNombre.focus();
+        } else {
+            mostrarMensajeAuth(traducirErrorAuth(error), 'error');
+        }
+    } finally {
+        btnEnviarAuth.disabled = false;
+    }
+});
+
+btnCerrarSesion?.addEventListener('click', async () => {
+    if (!clienteSupabase) return;
+    btnCerrarSesion.disabled = true;
+    mensajeSesion.textContent = 'Cerrando sesión...';
+    const { error } = await clienteSupabase.auth.signOut();
+    btnCerrarSesion.disabled = false;
+    mensajeSesion.textContent = error ? traducirErrorAuth(error) : '';
+    if (!error) {
+        cambiarModoAuth('ingresar');
+        cerrarModalCuenta();
+    }
+});
 
 document.querySelectorAll('[data-info-modal]').forEach(btn => {
     btn.addEventListener('click', () => abrirModalInformativo(btn.dataset.infoModal));
@@ -238,8 +516,13 @@ document.querySelectorAll('[data-cerrar-modal]').forEach(btn => {
 });
 
 document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') cerrarModalInformativo();
+    if (event.key === 'Escape') {
+        cerrarModalInformativo();
+        cerrarModalCuenta();
+    }
 });
+
+inicializarAutenticacion();
 
 document.getElementById('btnPortalTarot')?.addEventListener('click', function() {
     this.classList.add('abierta');

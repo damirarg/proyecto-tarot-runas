@@ -15,12 +15,22 @@ const PORT = process.env.PORT || 3000;
 // La clave de la API se lee de las variables de entorno de Render
 const API_KEY_GROQ = process.env.GROQ_API_KEY;
 const MODELO_GROQ = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_PUBLIC_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
 
 app.use(express.json());
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/api/configuracion-publica', (req, res) => {
+    res.json({
+        authDisponible: Boolean(SUPABASE_URL && SUPABASE_PUBLIC_KEY),
+        supabaseUrl: SUPABASE_URL || null,
+        supabasePublicKey: SUPABASE_PUBLIC_KEY || null
+    });
 });
 
 const PERSONALIDAD_TAROTISTA = `Actuá como un experto tarotista tradicional basado estrictamente en el mazo Rider-Waite.
