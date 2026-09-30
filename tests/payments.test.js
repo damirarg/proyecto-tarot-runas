@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { after, before, test } from 'node:test';
 
 process.env.VERCEL = '1';
@@ -24,6 +25,18 @@ global.fetch = async (url, opciones = {}) => {
     }
     if (String(url).endsWith('/checkout/preferences')) {
         return Response.json({ init_point: 'https://www.mercadopago.com.ar/checkout/v1/redirect' });
+    }
+    if (String(url).endsWith('/v1/payments/987654')) {
+        return Response.json({
+            id: 987654,
+            status: 'rejected',
+            external_reference: '11111111-1111-1111-1111-111111111111|premium_30d',
+            currency_id: 'ARS',
+            transaction_amount: 12500
+        });
+    }
+    if (String(url).endsWith('/rest/v1/rpc/apply_payment')) {
+        return Response.json(false);
     }
     throw new Error(`Solicitud externa inesperada: ${url}`);
 };
@@ -78,4 +91,33 @@ test('un webhook con firma inválida se rechaza antes de consultar el pago', asy
 
     assert.equal(respuesta.status, 401);
     assert.equal(solicitudesExternas.length, cantidadAnterior);
+});
+
+test('un pago rechazado no se convierte en una membresía aprobada', async () => {
+    const respuesta = await fetch(`${baseUrl}/api/pagos/confirmar`, {
+        method: 'POST',
+        headers: {
+            Authorization: 'Bearer sesion-de-prueba',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ paymentId: '987654' })
+    });
+
+    assert.equal(respuesta.status, 200);
+    assert.deepEqual(await respuesta.json(), { estado: 'rejected' });
+
+    const llamada = solicitudesExternas.find(({ url, opciones }) =>
+        url.endsWith('/rest/v1/rpc/apply_payment') && JSON.parse(opciones.body).p_provider_payment_id === '987654'
+    );
+    assert.ok(llamada);
+    assert.equal(JSON.parse(llamada.opciones.body).p_status, 'rejected');
+});
+
+test('la migración sólo concede días ante un pago aprobado', async () => {
+    const migracion = await readFile(
+        new URL('../supabase/migrations/202609300001_membresia_y_pagos.sql', import.meta.url),
+        'utf8'
+    );
+
+    assert.match(migracion, /if p_status = 'approved' and estado_anterior is distinct from 'approved' and p_days > 0 then/);
 });
