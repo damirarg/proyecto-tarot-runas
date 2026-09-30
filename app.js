@@ -384,7 +384,10 @@ function formatearPrecio(monto) {
 
 function textoOfertaPremium() {
     const premium = estadoCuenta?.premium;
-    return premium ? `Activar Premium · ${formatearPrecio(premium.precio)} / ${premium.dias} días` : 'Activar Premium';
+    const pagosDisponibles = estadoCuenta?.pagosDisponibles && Number(premium?.precio) > 0;
+    return pagosDisponibles
+        ? `Activar Premium · ${formatearPrecio(premium.precio)} / ${premium.dias} días`
+        : 'Premium próximamente';
 }
 
 // Convierte una respuesta con error del servidor en un Error con su código.
@@ -556,7 +559,12 @@ function crearAvisoAcceso(error) {
         titulo.textContent = 'Continuá tu camino con Oráculos Premium';
         texto.textContent = `${error.message} Incluye ${estadoCuenta?.tiradasPremiumLimite || 3} tiradas diarias y profundización en cada lectura.`;
         boton.textContent = textoOfertaPremium();
-        boton.addEventListener('click', () => iniciarPagoPremium(boton));
+        const pagosDisponibles = estadoCuenta?.pagosDisponibles && Number(estadoCuenta?.premium?.precio) > 0;
+        if (pagosDisponibles) {
+            boton.addEventListener('click', () => iniciarPagoPremium(boton));
+        } else {
+            boton.disabled = true;
+        }
     } else {
         titulo.textContent = 'Completaste tus tiradas de hoy';
         boton.textContent = 'Volver al inicio';
