@@ -223,10 +223,23 @@
                 </div>
                 <div class="cuenta-plan">
                     <span>Plan actual</span>
-                    <strong>Acceso gratuito</strong>
-                    <p>Incluye una Carta del Día o Runa del Día.</p>
+                    <strong id="cuentaPlanNombre">Acceso gratuito</strong>
+                    <p id="cuentaPlanDetalle">Incluye una Carta del Día o Runa del Día y una tirada de prueba.</p>
                     <p id="cuentaEstadoRitual" class="cuenta-estado-ritual">Comprobando el beneficio de hoy...</p>
+                    <p id="cuentaEstadoTiradas" class="cuenta-estado-ritual" hidden></p>
                 </div>
+                <div id="ofertaPremium" class="oferta-premium" hidden>
+                    <span>Oráculos Premium</span>
+                    <strong id="ofertaPremiumPrecio"></strong>
+                    <ul>
+                        <li>3 tiradas diarias de Tarot o Runas</li>
+                        <li>Profundización incluida en cada lectura</li>
+                        <li>Tu Carta o Runa del Día, como siempre</li>
+                    </ul>
+                    <button type="button" id="btnHacersePremium" class="btn-auth-principal">Activar Premium</button>
+                    <small>Pago único con MercadoPago: tarjeta, débito, dinero en cuenta o efectivo. Sin renovación automática.</small>
+                </div>
+                <p id="mensajePago" class="mensaje-auth" aria-live="polite"></p>
                 <button type="button" id="btnCerrarSesion" class="btn-auth-secundario">Cerrar sesión</button>
                 <p id="mensajeSesion" class="mensaje-auth" aria-live="polite"></p>
             </div>
@@ -240,6 +253,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="app.js?v=20260929-1"></script>
+    <script type="module" src="app.js?v=20260930-1"></script>
 </body>
 </html>

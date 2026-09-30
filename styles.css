@@ -1462,3 +1462,81 @@ body.bg-runas .caja-profundizacion {
     .mesa-tirada-7-runas strong { font-size: 0.68em; }
     .mesa-yggdrasil { max-width: 100%; overflow-x: auto; }
 }
+
+/* --- MEMBRESÍA PREMIUM --- */
+.oferta-premium {
+    padding: 18px 16px;
+    border: 1px solid rgba(197, 155, 39, 0.55);
+    border-radius: 8px;
+    background: linear-gradient(160deg, rgba(64, 42, 12, 0.42), rgba(7, 3, 14, 0.62));
+}
+
+.oferta-premium span {
+    display: block;
+    color: #c59b27;
+    font-family: sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.oferta-premium strong {
+    display: block;
+    margin-top: 5px;
+    color: #f3d06c;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+}
+
+.oferta-premium ul {
+    margin: 12px 0 16px;
+    padding-left: 18px;
+    color: #d8cbe9;
+    line-height: 1.6;
+}
+
+.oferta-premium .btn-auth-principal {
+    width: 100%;
+}
+
+.oferta-premium small {
+    display: block;
+    margin-top: 10px;
+    color: #9c8cab;
+    font-family: sans-serif;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.aviso-premium {
+    margin: 24px auto 0;
+    max-width: 560px;
+    padding: 24px 20px;
+    border: 1px solid rgba(197, 155, 39, 0.55);
+    border-radius: 8px;
+    background: rgba(12, 6, 22, 0.6);
+    text-align: center;
+}
+
+.aviso-premium h3 {
+    margin: 0 0 10px;
+    color: #f3d06c;
+    font-family: 'Playfair Display', serif;
+}
+
+.aviso-premium p {
+    margin: 0;
+    color: #d1c4e9;
+    line-height: 1.5;
+}
+
+.aviso-premium .btn-profundizar {
+    margin-top: 20px;
+}
+
+body.bg-runas .aviso-premium {
+    background: rgba(10, 15, 25, 0.6);
+    border-color: rgba(168, 194, 223, 0.45);
+}

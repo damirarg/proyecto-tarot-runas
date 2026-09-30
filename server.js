@@ -2,6 +2,9 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
+import { mazo } from './tarot-data.js';
+import { mazoRunas } from './runas-data.js';
 
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
@@ -18,7 +21,29 @@ const MODELO_GROQ = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_PUBLIC_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
+const MP_WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET;
+const PUBLIC_SITE_URL = (process.env.PUBLIC_SITE_URL || '').replace(/\/+$/, '');
+const TIRADAS_DIARIAS_PREMIUM = Number(process.env.PREMIUM_DAILY_READINGS || 3);
+const LARGO_MAXIMO_PREGUNTA = 500;
 
+// Catálogo de productos cobrables. Para vender un manual u otro material,
+// alcanza con agregar una entrada nueva (dias: 0 si no otorga membresía).
+const PRODUCTOS = {
+    premium_30d: {
+        titulo: 'Oráculos Premium · 30 días',
+        descripcion: `${TIRADAS_DIARIAS_PREMIUM} tiradas diarias de Tarot o Runas durante 30 días`,
+        precio: Number(process.env.PREMIUM_PRICE_ARS || 9999),
+        dias: 30
+    }
+};
+
+const CANTIDAD_POR_TIRADA_TAROT = { "1": 1, "3": 3, "3_ap": 3, "4_am": 4, "4_lab": 4, "5_prof": 5, "5": 5, "7": 7, "10": 10, "12": 12, "carta_dia": 1 };
+const CANTIDAD_POR_TIRADA_RUNAS = { runa_odin: 1, nornas: 3, cruz_runica: 4, tirada_5: 5, cruz_celta: 6, martillo_thor: 6, tirada_7: 7, yggdrasil: 9, runa_dia: 1 };
+const NOMBRES_CARTAS = new Set(mazo);
+const NOMBRES_RUNAS = new Set(mazoRunas.map(runa => runa.nombre));
+
+app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.static(__dirname));
 
@@ -94,12 +119,100 @@ async function reclamarRitualDiario(userId) {
     return ejecutarFuncionPrivada('claim_daily_ritual', { p_user_id: userId });
 }
 
-async function liberarRitualDiario(userId) {
-    try {
-        await ejecutarFuncionPrivada('release_daily_ritual', { p_user_id: userId });
-    } catch (error) {
-        console.error('No se pudo devolver el ritual diario:', error);
+function primeraFila(resultado) {
+    return Array.isArray(resultado) ? resultado[0] : resultado;
+}
+
+// Reserva el cupo de la lectura antes de llamar a la IA. Devuelve la fuente usada.
+async function reservarLectura(userId, esRitualDiario) {
+    if (esRitualDiario) {
+        const disponible = await reclamarRitualDiario(userId);
+        if (!disponible) {
+            throw new ErrorAplicacion(429, 'DAILY_RITUAL_USED', 'Ya utilizaste tu Carta o Runa del Día. Podrás volver mañana.');
+        }
+        return 'ritual';
     }
+
+    const reserva = primeraFila(await ejecutarFuncionPrivada('claim_reading', {
+        p_user_id: userId,
+        p_daily_limit: TIRADAS_DIARIAS_PREMIUM
+    }));
+
+    if (reserva?.allowed) return reserva.source;
+    if (reserva?.reason === 'DAILY_LIMIT') {
+        throw new ErrorAplicacion(429, 'DAILY_LIMIT', `Ya realizaste tus ${TIRADAS_DIARIAS_PREMIUM} tiradas de hoy. Se renuevan a medianoche (hora de Argentina).`);
+    }
+    throw new ErrorAplicacion(402, 'PREMIUM_REQUIRED', 'Ya usaste tu tirada de prueba. Activá Oráculos Premium para seguir consultando.');
+}
+
+async function liberarLectura(userId, fuente) {
+    try {
+        if (fuente === 'ritual') {
+            await ejecutarFuncionPrivada('release_daily_ritual', { p_user_id: userId });
+        } else {
+            await ejecutarFuncionPrivada('release_reading', { p_user_id: userId, p_source: fuente });
+        }
+    } catch (error) {
+        console.error('No se pudo devolver el cupo de la lectura:', error);
+    }
+}
+
+async function registrarLectura(userId, oraculo, pregunta, simbolos, fuente) {
+    try {
+        return await ejecutarFuncionPrivada('record_reading', {
+            p_user_id: userId,
+            p_oracle: oraculo,
+            p_question: pregunta,
+            p_symbols: simbolos,
+            p_source: fuente
+        });
+    } catch (error) {
+        console.error('No se pudo registrar la lectura:', error);
+        return null;
+    }
+}
+
+function validarTirada(idTirada, simbolos, cantidadesPorTirada, nombresValidos, tipo) {
+    const cantidadEsperada = cantidadesPorTirada[idTirada];
+    if (!cantidadEsperada) {
+        throw new ErrorAplicacion(400, 'INVALID_SPREAD', 'La tirada elegida no existe.');
+    }
+    if (!Array.isArray(simbolos) || simbolos.length !== cantidadEsperada || new Set(simbolos).size !== simbolos.length || !simbolos.every(nombre => nombresValidos.has(nombre))) {
+        throw new ErrorAplicacion(400, 'INVALID_SYMBOLS', `Las ${tipo} enviadas no corresponden a la tirada elegida.`);
+    }
+    return cantidadEsperada;
+}
+
+function normalizarPregunta(pregunta) {
+    return String(pregunta || '').trim().slice(0, LARGO_MAXIMO_PREGUNTA);
+}
+
+async function consultarGroq({ sistema, instrucciones, maxTokens, temperatura, contexto }) {
+    const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY_GROQ}`
+        },
+        body: JSON.stringify({
+            model: MODELO_GROQ,
+            temperature: temperatura,
+            max_tokens: maxTokens,
+            messages: [
+                { role: "system", content: sistema },
+                { role: "user", content: instrucciones }
+            ]
+        })
+    });
+
+    if (!respuestaGroq.ok) {
+        const detalleError = await respuestaGroq.text();
+        console.error(`Error en API Groq (${contexto}):`, respuestaGroq.status, detalleError);
+        throw new ErrorAplicacion(502, 'AI_ERROR', 'El oráculo no pudo completar la lectura. Tu cupo no fue descontado: probá nuevamente en unos minutos.');
+    }
+
+    const datos = await respuestaGroq.json();
+    return datos.choices[0].message.content;
 }
 
 function responderErrorAplicacion(res, error) {
@@ -111,8 +224,9 @@ function responderErrorAplicacion(res, error) {
 app.get('/api/cuenta/estado', async (req, res) => {
     try {
         const usuario = await obtenerUsuarioAutenticado(req);
-        const estado = await ejecutarFuncionPrivada('get_daily_access', { p_user_id: usuario.id });
-        const uso = Array.isArray(estado) ? estado[0] : estado;
+        const estado = primeraFila(await ejecutarFuncionPrivada('get_account_status', { p_user_id: usuario.id }));
+        const premiumHasta = estado?.membership_until || null;
+        const premiumActivo = Boolean(premiumHasta && new Date(premiumHasta) > new Date());
 
         res.json({
             usuario: {
@@ -120,14 +234,184 @@ app.get('/api/cuenta/estado', async (req, res) => {
                 email: usuario.email,
                 nombre: usuario.user_metadata?.nombre || ''
             },
-            plan: 'free',
-            ritualDiarioDisponible: Number(uso?.ritual_used || 0) < 1,
-            tiradasPremiumUsadas: Number(uso?.paid_readings_used || 0)
+            plan: premiumActivo ? 'premium' : 'free',
+            premiumHasta: premiumActivo ? premiumHasta : null,
+            ritualDiarioDisponible: Number(estado?.ritual_used || 0) < 1,
+            tiradaPruebaDisponible: !estado?.trial_reading_used,
+            tiradasPremiumUsadas: Number(estado?.paid_readings_used || 0),
+            tiradasPremiumLimite: TIRADAS_DIARIAS_PREMIUM,
+            pagosDisponibles: Boolean(MP_ACCESS_TOKEN),
+            premium: {
+                precio: PRODUCTOS.premium_30d.precio,
+                dias: PRODUCTOS.premium_30d.dias
+            }
         });
     } catch (error) {
         if (responderErrorAplicacion(res, error)) return;
         console.error('Error consultando el estado de cuenta:', error);
         res.status(500).json({ error: 'No pudimos consultar el estado de tu cuenta.' });
+    }
+});
+
+// --- PAGOS CON MERCADOPAGO (Checkout Pro) ---
+
+function obtenerOrigenPublico(req) {
+    return PUBLIC_SITE_URL || `${req.protocol}://${req.get('host')}`;
+}
+
+async function llamarMercadoPago(ruta, opciones = {}) {
+    if (!MP_ACCESS_TOKEN) {
+        throw new ErrorAplicacion(503, 'PAYMENTS_NOT_CONFIGURED', 'Los pagos todavía no están habilitados.');
+    }
+
+    const respuesta = await fetch(`https://api.mercadopago.com${ruta}`, {
+        ...opciones,
+        headers: {
+            Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json',
+            ...(opciones.headers || {})
+        }
+    });
+
+    if (!respuesta.ok) {
+        const detalle = await respuesta.text();
+        console.error(`Error en MercadoPago (${ruta}):`, respuesta.status, detalle);
+        throw new ErrorAplicacion(502, 'PAYMENT_PROVIDER_ERROR', 'No pudimos comunicarnos con MercadoPago. Probá nuevamente.');
+    }
+
+    return respuesta.json();
+}
+
+// Consulta el pago directamente a MercadoPago (fuente de verdad) y lo aplica a la cuenta.
+async function procesarPagoMercadoPago(paymentId, usuarioEsperado = null) {
+    const pago = await llamarMercadoPago(`/v1/payments/${encodeURIComponent(paymentId)}`);
+    const [userId, productoId] = String(pago.external_reference || '').split('|');
+    const producto = PRODUCTOS[productoId];
+
+    if (!userId || !producto) {
+        console.warn('Pago de MercadoPago sin referencia reconocida:', paymentId, pago.external_reference);
+        return { estado: pago.status, aplicado: false };
+    }
+    if (usuarioEsperado && userId !== usuarioEsperado) {
+        throw new ErrorAplicacion(403, 'PAYMENT_OTHER_USER', 'Este pago no corresponde a tu cuenta.');
+    }
+
+    const montoValido = pago.currency_id === 'ARS' && Number(pago.transaction_amount) + 0.01 >= producto.precio;
+    if (!montoValido) {
+        console.warn('Pago con monto o moneda inesperados:', paymentId, pago.transaction_amount, pago.currency_id);
+    }
+
+    const aplicado = await ejecutarFuncionPrivada('apply_payment', {
+        p_user_id: userId,
+        p_product: productoId,
+        p_provider_payment_id: String(pago.id),
+        p_status: pago.status,
+        p_amount: Number(pago.transaction_amount) || 0,
+        p_currency: pago.currency_id || 'ARS',
+        p_days: montoValido ? producto.dias : 0
+    });
+
+    return { estado: pago.status, aplicado: Boolean(aplicado) };
+}
+
+function firmaWebhookValida(req, dataId) {
+    const firma = req.get('x-signature') || '';
+    const requestId = req.get('x-request-id') || '';
+    const partes = Object.fromEntries(firma.split(',').map(parte => parte.split('=').map(valor => valor.trim())));
+    if (!partes.ts || !partes.v1) return false;
+
+    const idNormalizado = /^[a-z0-9]+$/i.test(dataId) ? String(dataId).toLowerCase() : String(dataId);
+    const manifiesto = `id:${idNormalizado};request-id:${requestId};ts:${partes.ts};`;
+    const esperado = crypto.createHmac('sha256', MP_WEBHOOK_SECRET).update(manifiesto).digest('hex');
+
+    const bufferEsperado = Buffer.from(esperado);
+    const bufferRecibido = Buffer.from(partes.v1);
+    return bufferEsperado.length === bufferRecibido.length && crypto.timingSafeEqual(bufferEsperado, bufferRecibido);
+}
+
+app.post('/api/pagos/crear-preferencia', async (req, res) => {
+    try {
+        const usuario = await obtenerUsuarioAutenticado(req);
+        const productoId = req.body?.producto || 'premium_30d';
+        const producto = PRODUCTOS[productoId];
+        if (!producto) {
+            throw new ErrorAplicacion(400, 'UNKNOWN_PRODUCT', 'El producto elegido no existe.');
+        }
+
+        const origen = obtenerOrigenPublico(req);
+        const esHttps = origen.startsWith('https://');
+        const preferencia = {
+            items: [{
+                id: productoId,
+                title: producto.titulo,
+                description: producto.descripcion,
+                quantity: 1,
+                currency_id: 'ARS',
+                unit_price: producto.precio
+            }],
+            external_reference: `${usuario.id}|${productoId}`,
+            back_urls: {
+                success: `${origen}/?pago=exito`,
+                failure: `${origen}/?pago=error`,
+                pending: `${origen}/?pago=pendiente`
+            },
+            statement_descriptor: 'ORACULOS'
+        };
+
+        // MercadoPago solo acepta retorno automático y notificaciones hacia URLs públicas con HTTPS.
+        if (esHttps) {
+            preferencia.auto_return = 'approved';
+            preferencia.notification_url = `${origen}/api/pagos/webhook`;
+        }
+
+        const datos = await llamarMercadoPago('/checkout/preferences', {
+            method: 'POST',
+            body: JSON.stringify(preferencia)
+        });
+
+        res.json({ url: datos.init_point });
+    } catch (error) {
+        if (responderErrorAplicacion(res, error)) return;
+        console.error('Error creando la preferencia de pago:', error);
+        res.status(500).json({ error: 'No pudimos iniciar el pago.' });
+    }
+});
+
+// Confirmación al volver de MercadoPago: no depende de que el webhook haya llegado.
+app.post('/api/pagos/confirmar', async (req, res) => {
+    try {
+        const usuario = await obtenerUsuarioAutenticado(req);
+        const paymentId = String(req.body?.paymentId || '');
+        if (!/^\d+$/.test(paymentId)) {
+            throw new ErrorAplicacion(400, 'INVALID_PAYMENT_ID', 'El identificador de pago no es válido.');
+        }
+
+        const resultado = await procesarPagoMercadoPago(paymentId, usuario.id);
+        res.json({ estado: resultado.estado });
+    } catch (error) {
+        if (responderErrorAplicacion(res, error)) return;
+        console.error('Error confirmando el pago:', error);
+        res.status(500).json({ error: 'No pudimos confirmar el pago.' });
+    }
+});
+
+app.post('/api/pagos/webhook', async (req, res) => {
+    const tipo = req.query.type || req.query.topic || req.body?.type;
+    const dataId = req.query['data.id'] || req.body?.data?.id || (tipo === 'payment' ? req.query.id : null);
+
+    if (tipo !== 'payment' || !dataId) return res.sendStatus(200);
+    if (MP_WEBHOOK_SECRET && !firmaWebhookValida(req, dataId)) {
+        console.warn('Webhook de MercadoPago con firma inválida.');
+        return res.sendStatus(401);
+    }
+
+    try {
+        await procesarPagoMercadoPago(dataId);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('Error procesando el webhook de MercadoPago:', error);
+        // Un 500 hace que MercadoPago reintente la notificación más tarde.
+        res.sendStatus(500);
     }
 });
 
@@ -175,23 +459,19 @@ function obtenerPosicionesTarot(idTirada, cantidadCartas) {
 }
 
 app.post('/api/consultar-tarot', async (req, res) => {
-    let ritualConsumidoPor = null;
+    let reserva = null;
     try {
-        const { pregunta, cartas, idTirada, cantidadCartas } = req.body;
-        const listaCartas = Array.isArray(cartas) ? cartas : [];
-        const listaCartasTexto = listaCartas.length ? listaCartas.join(", ") : (cartas || "Seleccionadas");
+        const { cartas, idTirada } = req.body;
+        const esCartaDelDia = idTirada === "carta_dia";
+        const pregunta = esCartaDelDia ? "Carta del Día" : normalizarPregunta(req.body.pregunta);
+        const cantidadCartas = validarTirada(idTirada, cartas, CANTIDAD_POR_TIRADA_TAROT, NOMBRES_CARTAS, 'cartas');
+        const listaCartas = cartas;
+        const listaCartasTexto = listaCartas.join(", ");
         const posicionesTarot = obtenerPosicionesTarot(idTirada, cantidadCartas);
         const cartasConPosiciones = listaCartas.map((carta, index) => `${index + 1}. ${posicionesTarot[index] || `Posición ${index + 1}`}: ${carta}`).join("\n");
-        const esCartaDelDia = pregunta === "Carta del Día" || idTirada === "carta_dia";
 
-        if (esCartaDelDia) {
-            const usuario = await obtenerUsuarioAutenticado(req);
-            const disponible = await reclamarRitualDiario(usuario.id);
-            if (!disponible) {
-                throw new ErrorAplicacion(429, 'DAILY_RITUAL_USED', 'Ya utilizaste tu Carta o Runa del Día. Podrás volver mañana.');
-            }
-            ritualConsumidoPor = usuario.id;
-        }
+        const usuario = await obtenerUsuarioAutenticado(req);
+        reserva = { userId: usuario.id, fuente: await reservarLectura(usuario.id, esCartaDelDia) };
 
         const instrucciones = esCartaDelDia ? `Carta elegida para la Carta del Día: ${listaCartasTexto}.
 
@@ -217,143 +497,85 @@ app.post('/api/consultar-tarot', async (req, res) => {
 
         ${FORMATO_LECTURA}`;
 
-        const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY_GROQ}`
-            },
-            body: JSON.stringify({
-                model: MODELO_GROQ,
-                temperature: 0.2,
-                max_tokens: cantidadCartas >= 7 ? 1900 : 1200,
-                messages: [
-                    { role: "system", content: PERSONALIDAD_TAROTISTA },
-                    { role: "user", content: instrucciones }
-                ]
-            })
+        const lectura = await consultarGroq({
+            sistema: PERSONALIDAD_TAROTISTA,
+            instrucciones,
+            maxTokens: cantidadCartas >= 7 ? 1900 : 1200,
+            temperatura: 0.2,
+            contexto: 'Tarot'
         });
-
-        if (!respuestaGroq.ok) {
-            const detalleError = await respuestaGroq.text();
-            console.error("Error en API Groq (Tarot):", respuestaGroq.status, detalleError);
-            if (ritualConsumidoPor) {
-                await liberarRitualDiario(ritualConsumidoPor);
-                ritualConsumidoPor = null;
-            }
-            return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
-        }
-
-        const datos = await respuestaGroq.json();
-        res.json({ lectura: datos.choices[0].message.content });
+        const lecturaId = await registrarLectura(usuario.id, 'tarot', pregunta, listaCartas, reserva.fuente);
+        reserva = null;
+        res.json({ lectura, lecturaId });
 
     } catch (error) {
-        if (ritualConsumidoPor) await liberarRitualDiario(ritualConsumidoPor);
+        if (reserva) await liberarLectura(reserva.userId, reserva.fuente);
         if (responderErrorAplicacion(res, error)) return;
         console.error("Error interno:", error);
         res.status(500).json({ error: "Error interno del servidor Node.js." });
     }
 });
 
-app.post('/api/profundizar-tarot', async (req, res) => {
+// Profundizar usa el contexto guardado de la lectura y se permite una sola vez por lectura.
+async function profundizarLectura(req, res) {
+    let reclamo = null;
     try {
-        const { pregunta, cartas } = req.body;
-        const listaCartasTexto = Array.isArray(cartas) ? cartas.join(", ") : (cartas || "de la tirada");
-
-        const instrucciones = `El usuario consultó sobre: "${pregunta || 'su inquietud'}" con las cartas: ${listaCartasTexto}.
-        Por favor, ofrecé una clarificación adicional, desglosando con mayor sencillez y profundidad el consejo global de estas cartas para disipar cualquier duda. Sé cálido, claro y alentador.
-
-        ${FORMATO_LECTURA}`;
-
-        const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY_GROQ}`
-            },
-            body: JSON.stringify({
-                model: MODELO_GROQ,
-                temperature: 0.2,
-                max_tokens: 1000,
-                messages: [
-                    { role: "system", content: PERSONALIDAD_TAROTISTA },
-                    { role: "user", content: instrucciones }
-                ]
-            })
-        });
-
-        if (!respuestaGroq.ok) {
-            const detalleError = await respuestaGroq.text();
-            console.error("Error en API Groq (Profundización Tarot):", respuestaGroq.status, detalleError);
-            return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
+        const usuario = await obtenerUsuarioAutenticado(req);
+        const lecturaId = String(req.body?.lecturaId || '');
+        if (!/^[0-9a-f-]{36}$/i.test(lecturaId)) {
+            throw new ErrorAplicacion(400, 'INVALID_READING', 'No encontramos la lectura a profundizar.');
         }
 
-        const datos = await respuestaGroq.json();
-        res.json({ profundizacion: datos.choices[0].message.content });
+        const lectura = primeraFila(await ejecutarFuncionPrivada('claim_deepening', { p_user_id: usuario.id, p_reading_id: lecturaId }));
+        if (!lectura) {
+            throw new ErrorAplicacion(409, 'ALREADY_DEEPENED', 'Esta lectura ya fue profundizada.');
+        }
+        reclamo = { userId: usuario.id, lecturaId };
 
-    } catch (error) {
-        console.error("Error interno en profundización:", error);
-        res.status(500).json({ error: "Error interno en el servidor de profundización." });
-    }
-});
+        const esTarot = lectura.oracle === 'tarot';
+        const listaSimbolosTexto = (lectura.symbols || []).join(", ");
+        const instrucciones = esTarot ? `El usuario consultó sobre: "${lectura.question || 'su inquietud'}" con las cartas: ${listaSimbolosTexto}.
+        Por favor, ofrecé una clarificación adicional, desglosando con mayor sencillez y profundidad el consejo global de estas cartas para disipar cualquier duda. Sé cálido, claro y alentador.
 
-app.post('/api/profundizar-runas', async (req, res) => {
-    try {
-        const { pregunta, runas } = req.body;
-        const listaRunasTexto = Array.isArray(runas) ? runas.join(", ") : (runas || "de la tirada");
-
-        const instrucciones = `El usuario consultó sobre: "${pregunta || 'su inquietud'}" con las runas: ${listaRunasTexto}.
+        ${FORMATO_LECTURA}` : `El usuario consultó sobre: "${lectura.question || 'su inquietud'}" con las runas: ${listaSimbolosTexto}.
         Por favor, ofrecé una clarificación adicional, desglosando con mayor sencillez y profundidad el consejo global de estas runas para disipar cualquier duda. Sé cálido, claro, alentador y recordá que estás hablando de la sabiduría rúnica (no uses la palabra "carta").
 
         ${FORMATO_LECTURA}`;
 
-        const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY_GROQ}`
-            },
-            body: JSON.stringify({
-                model: MODELO_GROQ,
-                temperature: 0.2,
-                max_tokens: 1000,
-                messages: [
-                    { role: "system", content: PERSONALIDAD_RUNAS },
-                    { role: "user", content: instrucciones }
-                ]
-            })
+        const profundizacion = await consultarGroq({
+            sistema: esTarot ? PERSONALIDAD_TAROTISTA : PERSONALIDAD_RUNAS,
+            instrucciones,
+            maxTokens: 1000,
+            temperatura: 0.2,
+            contexto: esTarot ? 'Profundización Tarot' : 'Profundización Runas'
         });
-
-        if (!respuestaGroq.ok) {
-            const detalleError = await respuestaGroq.text();
-            console.error("Error en API Groq (Profundización Runas):", respuestaGroq.status, detalleError);
-            return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
-        }
-
-        const datos = await respuestaGroq.json();
-        res.json({ profundizacion: datos.choices[0].message.content });
+        reclamo = null;
+        res.json({ profundizacion });
 
     } catch (error) {
-        console.error("Error interno en profundización de runas:", error);
-        res.status(500).json({ error: "Error interno en el servidor de profundización rúnica." });
+        if (reclamo) {
+            await ejecutarFuncionPrivada('release_deepening', { p_user_id: reclamo.userId, p_reading_id: reclamo.lecturaId }).catch(err => console.error('No se pudo liberar la profundización:', err));
+        }
+        if (responderErrorAplicacion(res, error)) return;
+        console.error("Error interno en profundización:", error);
+        res.status(500).json({ error: "Error interno en el servidor de profundización." });
     }
-});
+}
+
+app.post('/api/profundizar-tarot', profundizarLectura);
+app.post('/api/profundizar-runas', profundizarLectura);
 
 app.post('/api/consultar-runas', async (req, res) => {
-    let ritualConsumidoPor = null;
+    let reserva = null;
     try {
-        const { pregunta, runas, idTirada, cantidadRunas } = req.body;
-        const listaRunasTexto = Array.isArray(runas) ? runas.join(", ") : (runas || "Seleccionadas");
-        const esRunaDelDia = pregunta === "Runa del Día" || idTirada === "runa_dia";
+        const { runas, idTirada } = req.body;
+        const esRunaDelDia = idTirada === "runa_dia";
+        const pregunta = esRunaDelDia ? "Runa del Día" : normalizarPregunta(req.body.pregunta);
+        const cantidadRunas = validarTirada(idTirada, runas, CANTIDAD_POR_TIRADA_RUNAS, NOMBRES_RUNAS, 'runas');
+        const listaRunasTexto = runas.join(", ");
 
-        if (esRunaDelDia) {
-            const usuario = await obtenerUsuarioAutenticado(req);
-            const disponible = await reclamarRitualDiario(usuario.id);
-            if (!disponible) {
-                throw new ErrorAplicacion(429, 'DAILY_RITUAL_USED', 'Ya utilizaste tu Carta o Runa del Día. Podrás volver mañana.');
-            }
-            ritualConsumidoPor = usuario.id;
-        }
+        const usuario = await obtenerUsuarioAutenticado(req);
+        reserva = { userId: usuario.id, fuente: await reservarLectura(usuario.id, esRunaDelDia) };
 
         let detallePosiciones = "";
 
@@ -439,38 +661,19 @@ app.post('/api/consultar-runas', async (req, res) => {
 
         ${FORMATO_LECTURA}`;
 
-        const respuestaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY_GROQ}`
-            },
-            body: JSON.stringify({
-                model: MODELO_GROQ,
-                temperature: 0.3,
-                max_tokens: 1500,
-                messages: [
-                    { role: "system", content: PERSONALIDAD_RUNAS },
-                    { role: "user", content: instrucciones }
-                ]
-            })
+        const lectura = await consultarGroq({
+            sistema: PERSONALIDAD_RUNAS,
+            instrucciones,
+            maxTokens: 1500,
+            temperatura: 0.3,
+            contexto: 'Runas'
         });
-
-        if (!respuestaGroq.ok) {
-            const detalleError = await respuestaGroq.text();
-            console.error("Error en API Groq (Runas):", respuestaGroq.status, detalleError);
-            if (ritualConsumidoPor) {
-                await liberarRitualDiario(ritualConsumidoPor);
-                ritualConsumidoPor = null;
-            }
-            return res.status(respuestaGroq.status).json({ error: `Groq API Error (${respuestaGroq.status}): ${detalleError}` });
-        }
-
-        const datos = await respuestaGroq.json();
-        res.json({ lectura: datos.choices[0].message.content });
+        const lecturaId = await registrarLectura(usuario.id, 'runas', pregunta, runas, reserva.fuente);
+        reserva = null;
+        res.json({ lectura, lecturaId });
 
     } catch (error) {
-        if (ritualConsumidoPor) await liberarRitualDiario(ritualConsumidoPor);
+        if (reserva) await liberarLectura(reserva.userId, reserva.fuente);
         if (responderErrorAplicacion(res, error)) return;
         console.error("Error interno en /api/consultar-runas:", error);
         res.status(500).json({ error: "Error interno del servidor Node.js al consultar runas." });

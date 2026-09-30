@@ -3,6 +3,7 @@ import { mazoRunas, catalogoTiradasRunas, mezclarRunas } from './runas-data.js';
 
 let ultimaPregunta = "";
 let ultimasCartas = [];
+let ultimaLecturaId = null;
 let modoActual = "tarot"; 
 let intervaloNieve = null;
 const nombresRunas = mazoRunas.map(runa => runa.nombre).join('|');
@@ -156,11 +157,19 @@ const cuentaEmail = document.getElementById('cuentaEmail');
 const cuentaEstadoRitual = document.getElementById('cuentaEstadoRitual');
 const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 const mensajeSesion = document.getElementById('mensajeSesion');
+const cuentaPlanNombre = document.getElementById('cuentaPlanNombre');
+const cuentaPlanDetalle = document.getElementById('cuentaPlanDetalle');
+const cuentaEstadoTiradas = document.getElementById('cuentaEstadoTiradas');
+const ofertaPremium = document.getElementById('ofertaPremium');
+const ofertaPremiumPrecio = document.getElementById('ofertaPremiumPrecio');
+const btnHacersePremium = document.getElementById('btnHacersePremium');
+const mensajePago = document.getElementById('mensajePago');
 
 let clienteSupabase = null;
 let sesionUsuario = null;
 let authConfigurado = null;
 let modoFormularioAuth = 'ingresar';
+let estadoCuenta = null;
 
 const contenidosInformativos = {
     "como-funciona": {
@@ -302,7 +311,7 @@ function cambiarModoAuth(modo) {
 
     if (esRegistro) {
         cuentaTitulo.textContent = 'Crear cuenta';
-        cuentaIntroduccion.textContent = 'Registrate para acceder al ritual diario y preparar tu futura membresía.';
+        cuentaIntroduccion.textContent = 'Registrate gratis: incluye tu ritual diario y una tirada completa de prueba.';
         btnEnviarAuth.textContent = 'Crear mi cuenta';
     } else if (esRecuperacion) {
         cuentaTitulo.textContent = 'Recuperar acceso';
@@ -360,6 +369,61 @@ async function crearHeadersApi() {
     return headers;
 }
 
+function formatearPrecio(monto) {
+    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(monto);
+}
+
+function textoOfertaPremium() {
+    const premium = estadoCuenta?.premium;
+    return premium ? `Activar Premium · ${formatearPrecio(premium.precio)} / ${premium.dias} días` : 'Activar Premium';
+}
+
+// Convierte una respuesta con error del servidor en un Error con su código.
+async function crearErrorRespuesta(respuesta) {
+    const errorData = await respuesta.json().catch(() => ({}));
+    const error = new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
+    error.code = errorData.code;
+    return error;
+}
+
+function renderizarEstadoCuenta(datos) {
+    const esPremium = datos.plan === 'premium';
+
+    cuentaPlanNombre.textContent = esPremium ? 'Oráculos Premium' : 'Acceso gratuito';
+    cuentaPlanDetalle.textContent = esPremium
+        ? `Activo hasta el ${new Date(datos.premiumHasta).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}.`
+        : 'Incluye una Carta del Día o Runa del Día y una tirada de prueba.';
+
+    const ritualDisponible = datos.ritualDiarioDisponible;
+    cuentaEstadoRitual.textContent = ritualDisponible
+        ? 'Tu ritual de hoy está disponible.'
+        : 'Ya utilizaste el ritual de hoy. Se renueva mañana.';
+    cuentaEstadoRitual.className = `cuenta-estado-ritual ${ritualDisponible ? 'disponible' : 'utilizado'}`;
+
+    let tiradasDisponibles;
+    if (esPremium) {
+        const restantes = Math.max(datos.tiradasPremiumLimite - datos.tiradasPremiumUsadas, 0);
+        tiradasDisponibles = restantes > 0;
+        cuentaEstadoTiradas.textContent = tiradasDisponibles
+            ? `Te quedan ${restantes} de ${datos.tiradasPremiumLimite} tiradas hoy.`
+            : 'Completaste tus tiradas de hoy. Se renuevan a medianoche.';
+    } else {
+        tiradasDisponibles = datos.tiradaPruebaDisponible;
+        cuentaEstadoTiradas.textContent = tiradasDisponibles
+            ? 'Tu tirada de prueba está disponible.'
+            : 'Ya utilizaste tu tirada de prueba.';
+    }
+    cuentaEstadoTiradas.className = `cuenta-estado-ritual ${tiradasDisponibles ? 'disponible' : 'utilizado'}`;
+    cuentaEstadoTiradas.hidden = false;
+
+    const mostrarOferta = !esPremium && datos.pagosDisponibles;
+    ofertaPremium.hidden = !mostrarOferta;
+    if (mostrarOferta) {
+        ofertaPremiumPrecio.textContent = `${formatearPrecio(datos.premium.precio)} por ${datos.premium.dias} días`;
+        btnHacersePremium.textContent = textoOfertaPremium();
+    }
+}
+
 async function cargarEstadoCuenta() {
     if (!sesionUsuario || !cuentaEstadoRitual) return;
 
@@ -370,15 +434,132 @@ async function cargarEstadoCuenta() {
         const datos = await respuesta.json().catch(() => ({}));
         if (!respuesta.ok) throw new Error(datos.error || 'No se pudo consultar el beneficio.');
 
-        const disponible = datos.ritualDiarioDisponible;
-        cuentaEstadoRitual.textContent = disponible
-            ? 'Tu ritual gratuito de hoy está disponible.'
-            : 'Ya utilizaste el ritual de hoy. Se renueva mañana.';
-        cuentaEstadoRitual.className = `cuenta-estado-ritual ${disponible ? 'disponible' : 'utilizado'}`;
+        estadoCuenta = datos;
+        renderizarEstadoCuenta(datos);
     } catch (error) {
         cuentaEstadoRitual.textContent = error.message;
         cuentaEstadoRitual.className = 'cuenta-estado-ritual error';
     }
+}
+
+async function iniciarPagoPremium(boton) {
+    if (!sesionUsuario) {
+        if (authConfigurado) cambiarModoAuth('registro');
+        abrirModalCuenta();
+        return;
+    }
+
+    const textoOriginal = boton?.textContent;
+    if (boton) {
+        boton.disabled = true;
+        boton.textContent = 'Conectando con MercadoPago...';
+    }
+
+    try {
+        const respuesta = await fetch('/api/pagos/crear-preferencia', {
+            method: 'POST',
+            headers: await crearHeadersApi(),
+            body: JSON.stringify({ producto: 'premium_30d' })
+        });
+        if (!respuesta.ok) throw await crearErrorRespuesta(respuesta);
+
+        const datos = await respuesta.json();
+        window.location.href = datos.url;
+    } catch (error) {
+        if (boton) {
+            boton.disabled = false;
+            boton.textContent = textoOriginal;
+        }
+        if (mensajePago) {
+            mensajePago.textContent = error.message;
+            mensajePago.className = 'mensaje-auth mensaje-auth-error';
+        }
+        if (!modalCuenta?.classList.contains('visible')) alert(error.message);
+    }
+}
+
+// Al volver de MercadoPago, confirmamos el pago sin esperar al webhook.
+async function procesarRetornoPago() {
+    const parametros = new URLSearchParams(window.location.search);
+    const resultadoPago = parametros.get('pago');
+    if (!resultadoPago) return;
+
+    const paymentId = parametros.get('payment_id') || parametros.get('collection_id');
+    window.history.replaceState({}, '', window.location.pathname);
+
+    if (!sesionUsuario) return;
+    abrirModalCuenta();
+
+    const mostrar = (texto, tipo) => {
+        mensajePago.textContent = texto;
+        mensajePago.className = `mensaje-auth mensaje-auth-${tipo}`;
+    };
+
+    if (resultadoPago === 'error') {
+        mostrar('El pago no se completó. Podés intentarlo nuevamente cuando quieras.', 'error');
+        return;
+    }
+    if (!paymentId || paymentId === 'null') {
+        mostrar('Estamos esperando la confirmación de MercadoPago.', 'cargando');
+        return;
+    }
+
+    mostrar('Confirmando tu pago...', 'cargando');
+    try {
+        const respuesta = await fetch('/api/pagos/confirmar', {
+            method: 'POST',
+            headers: await crearHeadersApi(),
+            body: JSON.stringify({ paymentId })
+        });
+        if (!respuesta.ok) throw await crearErrorRespuesta(respuesta);
+
+        const datos = await respuesta.json();
+        if (datos.estado === 'approved') {
+            mostrar('¡Pago aprobado! Tu membresía Premium ya está activa.', 'exito');
+        } else if (datos.estado === 'pending' || datos.estado === 'in_process') {
+            mostrar('Tu pago está pendiente. Activaremos Premium apenas MercadoPago lo acredite.', 'cargando');
+        } else {
+            mostrar('El pago no fue aprobado. Podés intentarlo nuevamente.', 'error');
+        }
+    } catch (error) {
+        mostrar(error.message, 'error');
+    }
+    cargarEstadoCuenta();
+}
+
+// Aviso que reemplaza la lectura cuando falta cuenta, cupo o membresía.
+function crearAvisoAcceso(error) {
+    const aviso = document.createElement('div');
+    aviso.className = 'aviso-premium';
+
+    const titulo = document.createElement('h3');
+    const texto = document.createElement('p');
+    texto.textContent = error.message;
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'btn-profundizar';
+
+    if (error.code === 'AUTH_REQUIRED' || error.code === 'INVALID_SESSION') {
+        titulo.textContent = 'Ingresá a tu cuenta';
+        boton.textContent = 'Ingresar o crear cuenta';
+        boton.addEventListener('click', abrirModalCuenta);
+    } else if (error.code === 'PREMIUM_REQUIRED') {
+        titulo.textContent = 'Continuá tu camino con Oráculos Premium';
+        texto.textContent = `${error.message} Incluye ${estadoCuenta?.tiradasPremiumLimite || 3} tiradas diarias y profundización en cada lectura.`;
+        boton.textContent = textoOfertaPremium();
+        boton.addEventListener('click', () => iniciarPagoPremium(boton));
+    } else {
+        titulo.textContent = 'Completaste tus tiradas de hoy';
+        boton.textContent = 'Volver al inicio';
+        boton.addEventListener('click', () => document.getElementById('btnHacerOtraConsulta')?.click());
+    }
+
+    aviso.append(titulo, texto, boton);
+    return aviso;
+}
+
+function esErrorDeAcceso(error) {
+    return ['AUTH_REQUIRED', 'INVALID_SESSION', 'PREMIUM_REQUIRED', 'DAILY_LIMIT', 'DAILY_RITUAL_USED'].includes(error.code);
 }
 
 function abrirModalCuenta() {
@@ -429,6 +610,12 @@ async function inicializarAutenticacion() {
 
         clienteSupabase.auth.onAuthStateChange((evento, sesion) => {
             actualizarInterfazCuenta(sesion);
+            if (evento === 'SIGNED_IN') window.setTimeout(cargarEstadoCuenta, 0);
+            if (evento === 'SIGNED_OUT') {
+                estadoCuenta = null;
+                if (ofertaPremium) ofertaPremium.hidden = true;
+                if (mensajePago) mensajePago.textContent = '';
+            }
             if (evento === 'PASSWORD_RECOVERY') {
                 cambiarModoAuth('nueva-clave');
                 abrirModalCuenta();
@@ -437,6 +624,8 @@ async function inicializarAutenticacion() {
 
         const { data } = await clienteSupabase.auth.getSession();
         actualizarInterfazCuenta(data.session);
+        if (data.session) cargarEstadoCuenta();
+        procesarRetornoPago();
     } catch (error) {
         console.error('No se pudo iniciar el servicio de cuentas:', error);
         authConfigurado = false;
@@ -530,6 +719,8 @@ formAuth?.addEventListener('submit', async (event) => {
         btnEnviarAuth.disabled = false;
     }
 });
+
+btnHacersePremium?.addEventListener('click', () => iniciarPagoPremium(btnHacersePremium));
 
 btnCerrarSesion?.addEventListener('click', async () => {
     if (!clienteSupabase) return;
@@ -720,6 +911,15 @@ document.getElementById('btnFlechaDer')?.addEventListener('click', () => {
 });
 
 function ejecutarTiradaElegida(idTirada) {
+    if (!sesionUsuario) {
+        if (authConfigurado) cambiarModoAuth('registro');
+        abrirModalCuenta();
+        if (authConfigurado) {
+            mostrarMensajeAuth('Creá tu cuenta gratuita: incluye una tirada de prueba completa.', 'exito');
+        }
+        return;
+    }
+
     if (modoActual === "tarot") {
         let cantidad = 3;
         if (idTirada === "1") cantidad = 1;
@@ -829,11 +1029,9 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
                 body: JSON.stringify({ pregunta: "Carta del Día", cartas: [cartaElegida], idTirada: "carta_dia", cantidadCartas: 1 })
             });
 
-            if (!respuesta.ok) {
-                const errorData = await respuesta.json().catch(() => ({}));
-                throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
-            }
+            if (!respuesta.ok) throw await crearErrorRespuesta(respuesta);
             const datos = await respuesta.json();
+            ultimaLecturaId = datos.lecturaId || null;
 
             divResultado.innerHTML = `
                 <h3 class="titulo-consulta">Tu Carta del Día: ${cartaElegida}</h3>
@@ -848,6 +1046,10 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
 
         } catch (error) {
             console.error("Error detectado:", error);
+            if (esErrorDeAcceso(error)) {
+                divResultado.appendChild(crearAvisoAcceso(error));
+                return;
+            }
             divResultado.innerHTML += `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
         }
     }, 1000);
@@ -874,11 +1076,9 @@ async function elegirRunaInteractiva(elementoContenedor, runaElegida) {
                 body: JSON.stringify({ pregunta: "Runa del Día", runas: [runaElegida.nombre], idTirada: "runa_dia", cantidadRunas: 1 })
             });
 
-            if (!respuesta.ok) {
-                const errorData = await respuesta.json().catch(() => ({}));
-                throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
-            }
+            if (!respuesta.ok) throw await crearErrorRespuesta(respuesta);
             const datos = await respuesta.json();
+            ultimaLecturaId = datos.lecturaId || null;
 
             divResultado.innerHTML = `
                 <h3 class="titulo-consulta">Tu Runa del Día: ${runaElegida.nombre}</h3>
@@ -898,6 +1098,10 @@ async function elegirRunaInteractiva(elementoContenedor, runaElegida) {
 
         } catch (error) {
             console.error("Error detectado:", error);
+            if (esErrorDeAcceso(error)) {
+                divResultado.appendChild(crearAvisoAcceso(error));
+                return;
+            }
             divResultado.innerHTML += `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
         }
     }, 1000);
@@ -939,12 +1143,10 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
             body: JSON.stringify({ pregunta, cartas: cartasSeleccionadas, idTirada, cantidadCartas })
         });
         
-        if (!respuesta.ok) {
-            const errorData = await respuesta.json().catch(() => ({}));
-            throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
-        }
+        if (!respuesta.ok) throw await crearErrorRespuesta(respuesta);
         
         const datos = await respuesta.json();
+        ultimaLecturaId = datos.lecturaId || null;
         
         const tiradaElegida = catalogoTiradas.find(tirada => tirada.id === idTirada);
         const nombreTirada = tiradaElegida ? tiradaElegida.nombre : `Tirada de ${cantidadCartas} cartas`;
@@ -968,8 +1170,13 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
             </div>`;
         
         crearBotonProfundizar(divResultado);
+        cargarEstadoCuenta();
     } catch (error) { 
         console.error("Error detectado:", error);
+        if (esErrorDeAcceso(error)) {
+            divResultado.replaceChildren(crearAvisoAcceso(error));
+            return;
+        }
         divResultado.innerHTML = `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`; 
     }
 }
@@ -1007,12 +1214,10 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             body: JSON.stringify({ pregunta, runas: ultimasCartas, idTirada, cantidadRunas })
         });
         
-        if (!respuesta.ok) {
-            const errorData = await respuesta.json().catch(() => ({}));
-            throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
-        }
+        if (!respuesta.ok) throw await crearErrorRespuesta(respuesta);
         
         const datos = await respuesta.json();
+        ultimaLecturaId = datos.lecturaId || null;
         
         const tiradaElegida = catalogoTiradasRunas.find(tirada => tirada.id === idTirada);
         const nombreTirada = tiradaElegida ? tiradaElegida.nombre : `Tirada de ${cantidadRunas} runas`;
@@ -1049,15 +1254,23 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         
         divResultado.innerHTML = HTMLRunas;
         crearBotonProfundizar(divResultado);
+        cargarEstadoCuenta();
 
     } catch (error) { 
         console.error("Error detectado:", error);
+        if (esErrorDeAcceso(error)) {
+            divResultado.replaceChildren(crearAvisoAcceso(error));
+            return;
+        }
         divResultado.innerHTML = `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`; 
     }
 }
 
 // NUEVA FUNCIÓN: Ahora el botón usa la clase en lugar de estilos en línea
 function crearBotonProfundizar(contenedor) {
+    const lecturaId = ultimaLecturaId;
+    if (!lecturaId) return;
+
     const btn = document.createElement('button');
     btn.className = 'btn-profundizar';
     btn.textContent = '💡 PROFUNDIZAR EN ESTA LECTURA';
@@ -1074,7 +1287,7 @@ function crearBotonProfundizar(contenedor) {
         try {
             // LÓGICA INTELIGENTE: Elige el servidor de Tarot o Runas según el modoActual
             const endpoint = modoActual === "tarot" ? '/api/profundizar-tarot' : '/api/profundizar-runas';
-            const payload = modoActual === "tarot" ? { pregunta: ultimaPregunta, cartas: ultimasCartas } : { pregunta: ultimaPregunta, runas: ultimasCartas };
+            const payload = { lecturaId };
 
             const respuesta = await fetch(endpoint, {
                 method: 'POST',
@@ -1082,10 +1295,7 @@ function crearBotonProfundizar(contenedor) {
                 body: JSON.stringify(payload)
             });
             
-            if (!respuesta.ok) {
-                const errorData = await respuesta.json().catch(() => ({}));
-                throw new Error(errorData.error || `Servidor respondió con código ${respuesta.status}`);
-            }
+            if (!respuesta.ok) throw await crearErrorRespuesta(respuesta);
             
             const datos = await respuesta.json();
             
