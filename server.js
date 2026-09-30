@@ -24,8 +24,31 @@ const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPAB
 const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 const MP_WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET;
 const PUBLIC_SITE_URL = (process.env.PUBLIC_SITE_URL || '').replace(/\/+$/, '');
-const TIRADAS_DIARIAS_PREMIUM = Number(process.env.PREMIUM_DAILY_READINGS || 3);
+const TIRADAS_DIARIAS_PREMIUM = Number(process.env.PREMIUM_DAILY_READINGS || 0);
+const PRECIO_PREMIUM_ARS = Number(process.env.PREMIUM_PRICE_ARS || 0);
 const LARGO_MAXIMO_PREGUNTA = 500;
+
+function esEnteroPositivo(valor) {
+    return Number.isInteger(valor) && valor > 0;
+}
+
+function esUrlPublicaHttps(valor) {
+    try {
+        const url = new URL(valor);
+        return url.protocol === 'https:' && !['localhost', '127.0.0.1'].includes(url.hostname);
+    } catch {
+        return false;
+    }
+}
+
+const PAGOS_CONFIGURADOS = Boolean(
+    MP_ACCESS_TOKEN &&
+    MP_WEBHOOK_SECRET &&
+    esUrlPublicaHttps(PUBLIC_SITE_URL) &&
+    Number.isFinite(PRECIO_PREMIUM_ARS) &&
+    PRECIO_PREMIUM_ARS > 0 &&
+    esEnteroPositivo(TIRADAS_DIARIAS_PREMIUM)
+);
 
 // Catálogo de productos cobrables. Para vender un manual u otro material,
 // alcanza con agregar una entrada nueva (dias: 0 si no otorga membresía).
@@ -33,7 +56,7 @@ const PRODUCTOS = {
     premium_30d: {
         titulo: 'Oráculos Premium · 30 días',
         descripcion: `${TIRADAS_DIARIAS_PREMIUM} tiradas diarias de Tarot o Runas durante 30 días`,
-        precio: Number(process.env.PREMIUM_PRICE_ARS || 9999),
+        precio: PRECIO_PREMIUM_ARS,
         dias: 30
     }
 };
@@ -240,7 +263,7 @@ app.get('/api/cuenta/estado', async (req, res) => {
             tiradaPruebaDisponible: !estado?.trial_reading_used,
             tiradasPremiumUsadas: Number(estado?.paid_readings_used || 0),
             tiradasPremiumLimite: TIRADAS_DIARIAS_PREMIUM,
-            pagosDisponibles: Boolean(MP_ACCESS_TOKEN),
+            pagosDisponibles: PAGOS_CONFIGURADOS,
             premium: {
                 precio: PRODUCTOS.premium_30d.precio,
                 dias: PRODUCTOS.premium_30d.dias
@@ -254,10 +277,6 @@ app.get('/api/cuenta/estado', async (req, res) => {
 });
 
 // --- PAGOS CON MERCADOPAGO (Checkout Pro) ---
-
-function obtenerOrigenPublico(req) {
-    return PUBLIC_SITE_URL || `${req.protocol}://${req.get('host')}`;
-}
 
 async function llamarMercadoPago(ruta, opciones = {}) {
     if (!MP_ACCESS_TOKEN) {
@@ -331,6 +350,9 @@ function firmaWebhookValida(req, dataId) {
 
 app.post('/api/pagos/crear-preferencia', async (req, res) => {
     try {
+        if (!PAGOS_CONFIGURADOS) {
+            throw new ErrorAplicacion(503, 'PAYMENTS_NOT_CONFIGURED', 'Los pagos todavía no están habilitados.');
+        }
         const usuario = await obtenerUsuarioAutenticado(req);
         const productoId = req.body?.producto || 'premium_30d';
         const producto = PRODUCTOS[productoId];
@@ -338,8 +360,7 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
             throw new ErrorAplicacion(400, 'UNKNOWN_PRODUCT', 'El producto elegido no existe.');
         }
 
-        const origen = obtenerOrigenPublico(req);
-        const esHttps = origen.startsWith('https://');
+        const origen = PUBLIC_SITE_URL;
         const preferencia = {
             items: [{
                 id: productoId,
@@ -358,11 +379,8 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
             statement_descriptor: 'ORACULOS'
         };
 
-        // MercadoPago solo acepta retorno automático y notificaciones hacia URLs públicas con HTTPS.
-        if (esHttps) {
-            preferencia.auto_return = 'approved';
-            preferencia.notification_url = `${origen}/api/pagos/webhook`;
-        }
+        preferencia.auto_return = 'approved';
+        preferencia.notification_url = `${origen}/api/pagos/webhook`;
 
         const datos = await llamarMercadoPago('/checkout/preferences', {
             method: 'POST',
@@ -400,7 +418,8 @@ app.post('/api/pagos/webhook', async (req, res) => {
     const dataId = req.query['data.id'] || req.body?.data?.id || (tipo === 'payment' ? req.query.id : null);
 
     if (tipo !== 'payment' || !dataId) return res.sendStatus(200);
-    if (MP_WEBHOOK_SECRET && !firmaWebhookValida(req, dataId)) {
+    if (!PAGOS_CONFIGURADOS) return res.sendStatus(503);
+    if (!firmaWebhookValida(req, dataId)) {
         console.warn('Webhook de MercadoPago con firma inválida.');
         return res.sendStatus(401);
     }
@@ -464,6 +483,9 @@ app.post('/api/consultar-tarot', async (req, res) => {
         const { cartas, idTirada } = req.body;
         const esCartaDelDia = idTirada === "carta_dia";
         const pregunta = esCartaDelDia ? "Carta del Día" : normalizarPregunta(req.body.pregunta);
+        if (!esCartaDelDia && !pregunta) {
+            throw new ErrorAplicacion(400, 'QUESTION_REQUIRED', 'Escribí una pregunta antes de realizar la tirada.');
+        }
         const cantidadCartas = validarTirada(idTirada, cartas, CANTIDAD_POR_TIRADA_TAROT, NOMBRES_CARTAS, 'cartas');
         const listaCartas = cartas;
         const listaCartasTexto = listaCartas.join(", ");
@@ -571,6 +593,9 @@ app.post('/api/consultar-runas', async (req, res) => {
         const { runas, idTirada } = req.body;
         const esRunaDelDia = idTirada === "runa_dia";
         const pregunta = esRunaDelDia ? "Runa del Día" : normalizarPregunta(req.body.pregunta);
+        if (!esRunaDelDia && !pregunta) {
+            throw new ErrorAplicacion(400, 'QUESTION_REQUIRED', 'Escribí una pregunta antes de realizar la tirada.');
+        }
         const cantidadRunas = validarTirada(idTirada, runas, CANTIDAD_POR_TIRADA_RUNAS, NOMBRES_RUNAS, 'runas');
         const listaRunasTexto = runas.join(", ");
 

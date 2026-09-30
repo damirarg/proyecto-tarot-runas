@@ -32,6 +32,15 @@ function normalizarArticulosTarot(texto) {
         });
 }
 
+function escaparHtml(valor) {
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // --- FUNCIÓN PARA CONVERTIR MARKDOWN EN HTML DORADO ---
 function formatearTextoMarkdown(texto) {
     if (!texto) return "";
@@ -40,7 +49,7 @@ function formatearTextoMarkdown(texto) {
         .replace(/^\s*[-*]\s+/gm, '')
         .replace(/\n{3,}/g, '\n\n');
 
-    return textoLimpio
+    return escaparHtml(textoLimpio)
         .replace(/^###\s*(.*?)$/gm, '<h4 style="color: #f3d06c; font-family: \'Playfair Display\', serif; margin-top: 15px; margin-bottom: 5px;">$1</h4>')
         .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #f3d06c; font-family: \'Playfair Display\', serif; font-size: 1.1em;">$1</strong>')
         .replace(/\n/g, '<br>');
@@ -1050,7 +1059,7 @@ async function elegirCartaInteractiva(elementoContenedor, cartaElegida, archivoR
                 divResultado.appendChild(crearAvisoAcceso(error));
                 return;
             }
-            divResultado.innerHTML += `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
+            divResultado.innerHTML += `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${escaparHtml(error.message)}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
         }
     }, 1000);
 }
@@ -1102,7 +1111,7 @@ async function elegirRunaInteractiva(elementoContenedor, runaElegida) {
                 divResultado.appendChild(crearAvisoAcceso(error));
                 return;
             }
-            divResultado.innerHTML += `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
+            divResultado.innerHTML += `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${escaparHtml(error.message)}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
         }
     }, 1000);
 }
@@ -1156,7 +1165,7 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
         divResultado.innerHTML = `
             <h3 class="titulo-consulta">Tu Lectura de Tarot</h3>
             <div class="lectura-resumen lectura-resumen-tarot">
-                <span><strong>Pregunta</strong>${pregunta}</span>
+                <span><strong>Pregunta</strong>${escaparHtml(pregunta)}</span>
                 <span><strong>Método</strong>${nombreTirada}</span>
                 <span><strong>Cartas</strong>${listaCartas}</span>
             </div>
@@ -1177,7 +1186,7 @@ async function realizarConsultaTarot(cantidadCartas, idTirada) {
             divResultado.replaceChildren(crearAvisoAcceso(error));
             return;
         }
-        divResultado.innerHTML = `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`; 
+        divResultado.innerHTML = `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${escaparHtml(error.message)}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
     }
 }
 
@@ -1226,7 +1235,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
         let HTMLRunas = `
             <h3 class="titulo-consulta">Tu Consulta Rúnica</h3>
             <div class="lectura-resumen lectura-resumen-runas">
-                <span><strong>Pregunta</strong>${pregunta}</span>
+                <span><strong>Pregunta</strong>${escaparHtml(pregunta)}</span>
                 <span><strong>Método</strong>${nombreTirada}</span>
                 <span><strong>Runas</strong>${listaRunas}</span>
             </div>
@@ -1262,7 +1271,7 @@ async function realizarConsultaRunas(cantidadRunas, idTirada) {
             divResultado.replaceChildren(crearAvisoAcceso(error));
             return;
         }
-        divResultado.innerHTML = `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${error.message}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`; 
+        divResultado.innerHTML = `<div style="margin-top: 20px; padding: 15px; border: 1px solid #ff6b6b; border-radius: 8px; background-color: rgba(255, 107, 107, 0.1);"><strong style='color: #ff6b6b;'>Error de conexión:</strong><br><span style='color: #d1c4e9;'>${escaparHtml(error.message)}</span><br><br><small>Por favor, revisá los Logs de tu servidor en Render para ver el detalle técnico exacto.</small></div>`;
     }
 }
 
@@ -1304,7 +1313,7 @@ function crearBotonProfundizar(contenedor) {
 
         } catch (error) { 
             console.error("Error detectado:", error);
-            seccionProfundizacion.innerHTML = `<span style='color: #ff6b6b;'>No se pudo conectar para profundizar: ${error.message}</span>`; 
+            seccionProfundizacion.innerHTML = `<span style='color: #ff6b6b;'>No se pudo conectar para profundizar: ${escaparHtml(error.message)}</span>`;
         }
     });
 
