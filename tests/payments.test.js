@@ -35,8 +35,28 @@ global.fetch = async (url, opciones = {}) => {
             transaction_amount: 12500
         });
     }
+    if (String(url).endsWith('/v1/payments/181554635246')) {
+        return Response.json({
+            id: 181554635246,
+            status: 'refunded',
+            external_reference: '11111111-1111-1111-1111-111111111111|premium_30d',
+            currency_id: 'ARS',
+            transaction_amount: 12500
+        });
+    }
+    if (String(url).includes('/rest/v1/payments?')) {
+        return Response.json([{ provider_payment_id: '181554635246' }]);
+    }
     if (String(url).endsWith('/rest/v1/rpc/apply_payment')) {
         return Response.json(false);
+    }
+    if (String(url).endsWith('/rest/v1/rpc/get_account_status')) {
+        return Response.json([{
+            membership_until: null,
+            trial_reading_used: true,
+            ritual_used: 0,
+            paid_readings_used: 0
+        }]);
     }
     throw new Error(`Solicitud externa inesperada: ${url}`);
 };
@@ -111,6 +131,26 @@ test('un pago rechazado no se convierte en una membresía aprobada', async () =>
     );
     assert.ok(llamada);
     assert.equal(JSON.parse(llamada.opciones.body).p_status, 'rejected');
+});
+
+test('consultar la cuenta sincroniza un reembolso aunque no llegue el webhook', async () => {
+    const respuesta = await fetch(`${baseUrl}/api/cuenta/estado`, {
+        headers: { Authorization: 'Bearer sesion-de-prueba' }
+    });
+
+    assert.equal(respuesta.status, 200);
+
+    const consultaPago = solicitudesExternas.find(({ url }) =>
+        url.endsWith('/v1/payments/181554635246')
+    );
+    assert.ok(consultaPago);
+
+    const aplicacion = solicitudesExternas.find(({ url, opciones }) =>
+        url.endsWith('/rest/v1/rpc/apply_payment') &&
+        JSON.parse(opciones.body).p_provider_payment_id === '181554635246'
+    );
+    assert.ok(aplicacion);
+    assert.equal(JSON.parse(aplicacion.opciones.body).p_status, 'refunded');
 });
 
 test('la migración sólo concede días ante un pago aprobado', async () => {

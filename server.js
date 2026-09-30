@@ -146,6 +146,43 @@ function primeraFila(resultado) {
     return Array.isArray(resultado) ? resultado[0] : resultado;
 }
 
+async function obtenerPagosAprobadosMercadoPago(userId) {
+    if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) return [];
+
+    const parametros = new URLSearchParams({
+        select: 'provider_payment_id',
+        user_id: `eq.${userId}`,
+        provider: 'eq.mercadopago',
+        status: 'eq.approved',
+        order: 'updated_at.desc',
+        limit: '10'
+    });
+    const respuesta = await fetch(`${SUPABASE_URL}/rest/v1/payments?${parametros}`, {
+        headers: {
+            apikey: SUPABASE_SECRET_KEY,
+            Authorization: `Bearer ${SUPABASE_SECRET_KEY}`
+        }
+    });
+
+    if (!respuesta.ok) {
+        const detalle = await respuesta.text();
+        console.error('Error consultando pagos en Supabase:', respuesta.status, detalle);
+        throw new Error('No se pudieron consultar los pagos aprobados.');
+    }
+
+    return respuesta.json();
+}
+
+// Respaldo para actualizaciones que no llegan por webhook, especialmente en modo de prueba.
+async function sincronizarPagosAprobados(userId) {
+    if (!PAGOS_CONFIGURADOS) return;
+
+    const pagos = await obtenerPagosAprobadosMercadoPago(userId);
+    await Promise.all(pagos.map(({ provider_payment_id: paymentId }) =>
+        procesarPagoMercadoPago(paymentId, userId)
+    ));
+}
+
 // Reserva el cupo de la lectura antes de llamar a la IA. Devuelve la fuente usada.
 async function reservarLectura(userId, esRitualDiario) {
     if (esRitualDiario) {
@@ -247,6 +284,14 @@ function responderErrorAplicacion(res, error) {
 app.get('/api/cuenta/estado', async (req, res) => {
     try {
         const usuario = await obtenerUsuarioAutenticado(req);
+
+        try {
+            await sincronizarPagosAprobados(usuario.id);
+        } catch (error) {
+            // La consulta de la cuenta no debe quedar inutilizable por una demora del proveedor de pagos.
+            console.error('No se pudieron sincronizar los pagos de la cuenta:', error);
+        }
+
         const estado = primeraFila(await ejecutarFuncionPrivada('get_account_status', { p_user_id: usuario.id }));
         const premiumHasta = estado?.membership_until || null;
         const premiumActivo = Boolean(premiumHasta && new Date(premiumHasta) > new Date());
